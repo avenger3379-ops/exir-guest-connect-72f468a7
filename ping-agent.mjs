@@ -296,15 +296,65 @@ async function handlePower(body) {
 
 function runShutdown(args, user, pass, host, machine) {
   return new Promise((resolve) => {
-    const done = () =>
-      execFile("shutdown", args, { timeout: 8000 }, (err, stdout, stderr) => {
-        if (err) return resolve({ ok: false, error: (stderr || err.message).toString().trim().slice(0, 200) });
-        resolve({ ok: true, note: `sent to ${machine}` });
+    const flag = args.includes("/l") ? "/l" : args.includes("/r") ? "/r" : "/s";
+
+    // Try Windows built-in `shutdown /m \\host …` first.
+    const tryShutdown = () =>
+      execFile("shutdown", args, { timeout: 8000 }, (err, _out, stderr) => {
+        if (!err) return resolve({ ok: true, note: `shutdown → ${machine}` });
+        const msg = (stderr || err.message || "").toString().trim();
+        const accessDenied = /access is denied|denied\.?\s*\(5\)|\b5\b/i.test(msg);
+        if (accessDenied && user && pass) return tryPsExec(msg);
+        resolve({ ok: false, error: msg.slice(0, 200) });
       });
+
+    // Fallback #1: PsExec (Sysinternals) — most reliable for admin ops with creds.
+    const tryPsExec = (prevMsg) => {
+      const psArgs =
+        flag === "/l"
+          ? [`\\\\${host}`, "-u", user, "-p", pass, "-h", "-accepteula", "shutdown", "/l", "/f"]
+          : [`\\\\${host}`, "-u", user, "-p", pass, "-h", "-accepteula", "shutdown", flag, "/t", "0", "/f"];
+      execFile("psexec", psArgs, { timeout: 15000 }, (err, _out, stderr) => {
+        if (!err) return resolve({ ok: true, note: `psexec → ${machine}` });
+        // PsExec not installed → try WMIC as last resort.
+        if (err.code === "ENOENT") return tryWmic(prevMsg);
+        const msg = (stderr || err.message || "").toString().trim();
+        if (/access is denied|denied|\b5\b/i.test(msg)) return tryWmic(prevMsg);
+        resolve({ ok: false, error: `psexec: ${msg.slice(0, 200)}` });
+      });
+    };
+
+    // Fallback #2: WMIC remote process create — works when RPC/WMI allowed.
+    const tryWmic = (prevMsg) => {
+      const shutdownFlag = flag === "/l" ? "logoff" : flag === "/r" ? "reboot" : "shutdown";
+      // Note: WMIC's Win32Shutdown values: 0 logoff, 1 shutdown, 2 reboot, 4 force, 6 force+reboot, 5 force+shutdown, 8 poweroff
+      const code = shutdownFlag === "logoff" ? 4 : shutdownFlag === "reboot" ? 6 : 5;
+      const wmicArgs = [
+        "/node:" + host,
+        "/user:" + user,
+        "/password:" + pass,
+        "os",
+        "call",
+        "win32shutdown",
+        String(code),
+      ];
+      execFile("wmic", wmicArgs, { timeout: 15000 }, (err, _out, stderr) => {
+        if (!err) return resolve({ ok: true, note: `wmic → ${machine}` });
+        if (err.code === "ENOENT") {
+          return resolve({
+            ok: false,
+            error: `access denied and no PsExec/WMIC available. ${prevMsg.slice(0, 120)}`,
+          });
+        }
+        const msg = (stderr || err.message || "").toString().trim();
+        resolve({ ok: false, error: `wmic: ${msg.slice(0, 200)} | shutdown: ${prevMsg.slice(0, 120)}` });
+      });
+    };
+
+    // Establish auth to remote IPC$ first (best-effort) then run.
     if (user && pass) {
-      // Establish auth to remote IPC$ first (best-effort).
-      execFile("net", ["use", `\\\\${host}\\IPC$`, `/user:${user}`, pass], { timeout: 5000 }, () => done());
-    } else done();
+      execFile("net", ["use", `\\\\${host}\\IPC$`, `/user:${user}`, pass], { timeout: 5000 }, () => tryShutdown());
+    } else tryShutdown();
   });
 }
 
