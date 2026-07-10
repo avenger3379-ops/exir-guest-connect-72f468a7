@@ -155,3 +155,57 @@ function Stat({ label, value, accent = "cyan" }: { label: string; value: string;
     </div>
   );
 }
+
+function LanCacheBox({ cache, ip }: { cache: ClientCache | null; ip: string | null }) {
+  const color =
+    cache?.mode === "hit" ? "var(--neon-green)"
+    : cache?.mode === "miss" ? "var(--neon-red)"
+    : cache?.mode === "mixed" ? "var(--neon-amber)"
+    : "oklch(0.55 0.02 250)";
+  const label =
+    cache?.mode === "hit" ? "CACHE HIT"
+    : cache?.mode === "miss" ? "INTERNET"
+    : cache?.mode === "mixed" ? "MIXED"
+    : "IDLE";
+  const total = (cache?.hits ?? 0) + (cache?.misses ?? 0);
+  const ratio = total ? Math.round(((cache?.hits ?? 0) / total) * 100) : 0;
+
+  return (
+    <div
+      className="mt-4 rounded-md border p-2.5"
+      style={{ borderColor: `${color}55`, background: `${color}0d` }}
+    >
+      <div className="mb-1.5 flex items-center justify-between">
+        <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest" style={{ color }}>
+          <Database size={11} /> ▸ lancache · {label}
+        </div>
+        <span className="font-mono text-[9px] text-muted-foreground">
+          {ip ? `ip ${ip}` : "no ip mapping"}
+        </span>
+      </div>
+      <div className="grid grid-cols-4 gap-2">
+        <LanStat label="Hits"     value={String(cache?.hits ?? 0)}   icon={<Zap size={11} />}      color="var(--neon-green)" />
+        <LanStat label="Misses"   value={String(cache?.misses ?? 0)} icon={<Cloud size={11} />}    color="var(--neon-red)" />
+        <LanStat label="Hit %"    value={`${ratio}%`}                icon={<Zap size={11} />}      color="var(--neon-cyan)" />
+        <LanStat label="Speed"    value={`${cache?.speedKBs ?? 0} KB/s`} icon={<Database size={11} />} color="var(--neon-magenta)" />
+      </div>
+      <div className="mt-1.5 font-mono text-[9px] text-muted-foreground">
+        last service: <span className="text-foreground/80">{cache?.lastService || "—"}</span>
+        {cache?.lastAt ? <> · {new Date(cache.lastAt).toLocaleTimeString()}</> : null}
+      </div>
+    </div>
+  );
+}
+
+function LanStat({ label, value, icon, color }: { label: string; value: string; icon: React.ReactNode; color: string }) {
+  return (
+    <div className="rounded border border-border/60 bg-surface/40 p-1.5">
+      <div className="flex items-center gap-1 font-mono text-[8px] uppercase tracking-widest text-muted-foreground">
+        <span style={{ color }}>{icon}</span> {label}
+      </div>
+      <div className="mt-0.5 font-mono text-sm font-black leading-none" style={{ color, textShadow: `0 0 5px ${color}55` }}>
+        {value}
+      </div>
+    </div>
+  );
+}
