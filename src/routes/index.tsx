@@ -247,7 +247,7 @@ function Dashboard() {
               onDisconnect={handleDisconnect}
             />
             <StatusPill label="Stations" value={`${onlineCount}/12`} color="cyan" />
-            <StatusPill label="Reserved" value={`${reservedCount}/${totalSeats}`} color={reservedCount > 0 ? "amber" : "cyan"} />
+            <StatusPill label="Reserved" value={`${reservedCount}/${totalSeats}`} color={reservedCount > 0 ? "magenta" : "cyan"} />
             <StatusPill label="Server" value="OK" color="green" />
             <StatusPill label="Time" value={now} color="magenta" />
             <Link
