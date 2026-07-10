@@ -127,6 +127,7 @@ export function ClientDetailModal({ client, onClose }: Props) {
                 Send Message
               </button>
             </div>
+            <LanCacheBox cache={cache} ip={ipFromMachine(client.machine)} />
             <PowerControls machine={client.machine} />
           </>
         ) : (
