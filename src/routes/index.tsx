@@ -179,6 +179,27 @@ function Dashboard() {
 
   const onlineCount = useMemo(() => clients.filter((c) => c.online !== false).length, [clients]);
 
+  // Live reservation counter for the header pill.
+  const [reservedCount, setReservedCount] = useState(0);
+  const totalSeats = useMemo(() => defaultSeats().length, []);
+  useEffect(() => {
+    const recount = () => {
+      const map = loadReservations();
+      let n = 0;
+      for (const r of Object.values(map)) if (remainingMinutes(r) > 0) n++;
+      setReservedCount(n);
+    };
+    recount();
+    window.addEventListener("exir:reservations", recount);
+    window.addEventListener("storage", recount);
+    const id = setInterval(recount, 30_000);
+    return () => {
+      window.removeEventListener("exir:reservations", recount);
+      window.removeEventListener("storage", recount);
+      clearInterval(id);
+    };
+  }, []);
+
 
   return (
     <div className="relative min-h-screen overflow-hidden">
