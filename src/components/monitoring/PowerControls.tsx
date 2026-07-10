@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Power, RotateCw, LogOut, Zap } from "lucide-react";
-import { sendPower, type PowerAction } from "@/lib/power";
+import { Power, RotateCw, LogOut, Zap, KeyRound } from "lucide-react";
+import { sendPower, loadPowerCreds, savePowerCreds, type PowerAction } from "@/lib/power";
 
 const ACTIONS: { key: PowerAction; label: string; icon: React.ReactNode; accent: string; confirm?: boolean }[] = [
   { key: "wol",      label: "Wake-on-LAN", icon: <Zap size={13} />,     accent: "var(--neon-green)" },
@@ -12,22 +12,52 @@ const ACTIONS: { key: PowerAction; label: string; icon: React.ReactNode; accent:
 export function PowerControls({ machine }: { machine: string }) {
   const [busy, setBusy] = useState<PowerAction | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [msgOk, setMsgOk] = useState(false);
+  const [showCreds, setShowCreds] = useState(false);
+  const [creds, setCreds] = useState(() => loadPowerCreds());
 
   async function run(a: (typeof ACTIONS)[number]) {
     if (a.confirm && !confirm(`${a.label} ${machine}?`)) return;
+    // If creds are missing for a remote action, nudge the user first.
+    if (a.key !== "wol" && (!creds.user || !creds.pass)) {
+      setMsg("admin user/pass needed — click the key icon");
+      setMsgOk(false);
+      setShowCreds(true);
+      return;
+    }
     setBusy(a.key);
     setMsg(null);
     const r = await sendPower(a.key, machine);
     setBusy(null);
-    setMsg(r.ok ? `${a.label} → sent` : `${a.label} failed: ${r.error || "?"}`);
-    setTimeout(() => setMsg(null), 3500);
+    setMsgOk(!!r.ok);
+    setMsg(r.ok ? `${a.label} → sent${r.note ? ` (${r.note})` : ""}` : `${a.label} failed: ${r.error || "?"}`);
+    setTimeout(() => setMsg(null), 5000);
+  }
+
+  function saveAndClose() {
+    savePowerCreds(creds);
+    setShowCreds(false);
+    setMsg("credentials saved");
+    setMsgOk(true);
+    setTimeout(() => setMsg(null), 2000);
   }
 
   return (
     <div className="mt-4">
-      <div className="mb-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-        ▸ power control
+      <div className="mb-1.5 flex items-center justify-between">
+        <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          ▸ power control
+        </div>
+        <button
+          onClick={() => setShowCreds((s) => !s)}
+          title="Admin credentials (needed to bypass 'Access is denied 5')"
+          className="flex items-center gap-1 rounded border border-border/60 px-1.5 py-0.5 font-mono text-[9px] uppercase text-muted-foreground hover:text-foreground"
+        >
+          <KeyRound size={10} />
+          {creds.user ? `as ${creds.user}` : "set creds"}
+        </button>
       </div>
+
       <div className="grid grid-cols-4 gap-2">
         {ACTIONS.map((a) => (
           <button
@@ -43,8 +73,54 @@ export function PowerControls({ machine }: { machine: string }) {
           </button>
         ))}
       </div>
+
+      {showCreds && (
+        <div className="mt-2 rounded-md border border-border/60 bg-surface/40 p-2">
+          <div className="mb-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+            admin credentials (used for shutdown/restart/logoff via net use + shutdown/psexec/wmic)
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              autoFocus
+              placeholder="user (e.g. Administrator)"
+              value={creds.user || ""}
+              onChange={(e) => setCreds({ ...creds, user: e.target.value })}
+              className="rounded border border-border bg-background/60 px-2 py-1 font-mono text-[11px] outline-none focus:border-cyan-500"
+            />
+            <input
+              type="password"
+              placeholder="password"
+              value={creds.pass || ""}
+              onChange={(e) => setCreds({ ...creds, pass: e.target.value })}
+              className="rounded border border-border bg-background/60 px-2 py-1 font-mono text-[11px] outline-none focus:border-cyan-500"
+            />
+          </div>
+          <div className="mt-2 flex justify-end gap-2">
+            <button
+              onClick={() => setShowCreds(false)}
+              className="rounded border border-border/60 px-2 py-0.5 font-mono text-[10px] uppercase text-muted-foreground hover:text-foreground"
+            >
+              cancel
+            </button>
+            <button
+              onClick={saveAndClose}
+              className="rounded border border-cyan-500/60 bg-cyan-500/15 px-2 py-0.5 font-mono text-[10px] font-bold uppercase text-cyan-300 hover:bg-cyan-500/25"
+            >
+              save
+            </button>
+          </div>
+        </div>
+      )}
+
       {msg && (
-        <div className="mt-2 rounded border border-border/60 bg-surface/40 px-2 py-1 font-mono text-[10px] text-muted-foreground">
+        <div
+          className="mt-2 rounded border px-2 py-1 font-mono text-[10px]"
+          style={{
+            borderColor: msgOk ? "var(--neon-green)55" : "var(--neon-red)55",
+            color: msgOk ? "var(--neon-green)" : "var(--neon-red)",
+            background: msgOk ? "var(--neon-green)10" : "var(--neon-red)10",
+          }}
+        >
           {msg}
         </div>
       )}
