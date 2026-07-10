@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
+import { Database, Zap, Cloud } from "lucide-react";
 import type { ClientStatus } from "@/lib/monitoring-types";
 import { MetricBar } from "./MetricBar";
 import { PowerControls } from "./PowerControls";
 import { getMachine, launchVnc, loadVncConfig } from "@/lib/vnc-config";
 import { loadSettings, type GaugeSettings } from "@/lib/gauge-settings";
+import { ipFromMachine, type ClientCache } from "@/lib/cache-activity";
+import { CACHE_EVT } from "./CacheActivityPanel";
 
 interface Props {
   client: ClientStatus | null;
