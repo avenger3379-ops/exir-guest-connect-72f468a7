@@ -31,6 +31,21 @@ export function ClientDetailModal({ client, onClose }: Props) {
     return () => window.removeEventListener("keydown", onKey);
   }, [client, onClose]);
 
+  // Subscribe to LanCache activity for this client's IP.
+  const [cache, setCache] = useState<ClientCache | null>(null);
+  useEffect(() => {
+    if (!client) return;
+    const ip = ipFromMachine(client.machine);
+    if (!ip) return;
+    const read = () => {
+      const map = (window as unknown as { __exirCache?: Record<string, ClientCache> }).__exirCache;
+      setCache(map?.[ip] || null);
+    };
+    read();
+    window.addEventListener(CACHE_EVT, read);
+    return () => window.removeEventListener(CACHE_EVT, read);
+  }, [client]);
+
   if (!client) return null;
 
   const online = client.online !== false;
