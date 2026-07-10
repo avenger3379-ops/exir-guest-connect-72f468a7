@@ -131,7 +131,18 @@ export async function fetchCacheTail(cfg: CacheSshConfig, lines = 400): Promise<
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ host: cfg.host, port: cfg.port, user: cfg.user, pass: cfg.pass, path: cfg.logPath, lines }),
     });
-    const j = await r.json();
+    // Safely handle empty / non-JSON bodies (agent crash, proxy, CORS 204…)
+    // so callers never see "Unexpected end of JSON input".
+    const text = await r.text().catch(() => "");
+    if (!text.trim()) {
+      return { ok: false, lines: [], error: `agent returned empty body (HTTP ${r.status})` };
+    }
+    let j: { ok?: boolean; lines?: string[]; error?: string } = {};
+    try {
+      j = JSON.parse(text) as typeof j;
+    } catch {
+      return { ok: false, lines: [], error: `bad JSON from agent: ${text.slice(0, 120)}` };
+    }
     return { ok: !!j.ok, lines: j.lines || [], error: j.error };
   } catch (e) {
     return { ok: false, lines: [], error: (e as Error).message };
