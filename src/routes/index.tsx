@@ -305,8 +305,13 @@ function Dashboard() {
           />
         </section>
 
-        {/* Steam & Epic platform status */}
+        {/* Epic CDN Discovery — above launcher status */}
         <section className="mt-5">
+          <EpicCdnDiscovery />
+        </section>
+
+        {/* Steam & Epic platform status */}
+        <section className="mt-3">
           <SteamEpicStatus />
         </section>
 
