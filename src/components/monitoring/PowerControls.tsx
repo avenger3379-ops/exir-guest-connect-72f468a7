@@ -14,6 +14,7 @@ export function PowerControls({ machine }: { machine: string }) {
   const [msg, setMsg] = useState<string | null>(null);
   const [msgOk, setMsgOk] = useState(false);
   const [showCreds, setShowCreds] = useState(false);
+  const [open, setOpen] = useState(false);
   const [creds, setCreds] = useState(() => loadPowerCreds());
 
   async function run(a: (typeof ACTIONS)[number]) {
