@@ -136,6 +136,8 @@ export function PowerControls({ machine }: { machine: string }) {
           {msg}
         </div>
       )}
+      </>
+      )}
     </div>
   );
 }
