@@ -13,9 +13,9 @@ import {
 const POLL_MS = 3000;
 const WINDOW_MS = 15_000;
 const MAX_KEEP = 800;
-
 // Broadcast per-client cache state so ClientCard can subscribe.
 export const CACHE_EVT = "exir:cache-clients";
+export const CACHE_LINES_EVT = "exir:cache-lines";
 
 export function CacheActivityPanel() {
   const [cfg, setCfg] = useState<CacheSshConfig>(() => loadCacheSsh());
