@@ -360,7 +360,7 @@ function runShutdown(args, user, pass, host, machine) {
 
 // Tier → Mikrotik max-limit (upload/download). "UNL" removes the limit.
 const TIER_LIMIT = {
-  "500K": "512k/512k",
+  "500K": "1M/512k",
   "1M": "1M/1M",
   "2M": "2M/2M",
 };
