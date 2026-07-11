@@ -18,8 +18,8 @@ const COLOR_KEY = "exir.qos.colors.v1";
 
 export const DEFAULT_COLORS: QosColors = {
   "500K": "#22c55e",
-  "1M": "#fb923c",
-  "2M": "#38bdf8",
+  "1M": "#06b6d4",
+  "2M": "#fb923c",
   UNL: "#ef4444",
 };
 
