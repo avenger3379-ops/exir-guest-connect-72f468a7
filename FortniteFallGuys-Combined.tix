@@ -1,0 +1,4026 @@
+<GoodSyncSettings>
+ProgOptions = <ProgramOptions>
+  TimeStamp = 0
+GlobalFilterIncluded = <FileMask>
+Matches = (
+) </FileMask>
+GlobalFilterExcluded = <FileMask>
+Matches = (
+) </FileMask>
+  SaveMonthsOldGens = 12
+SmtpServer = <SmtpServer>
+    Port = 587
+    StartTls = Yes
+</SmtpServer>
+  AutoJobQuantSec = 3
+</ProgramOptions>
+ServerAccounts = <AccountManager>
+Servers = { | <ServerAcct>
+  Key = "afp://"
+  TimeStamp = 1771252311
+  Name = "Local Network"
+Conn = <Connect>
+    Url = "afp://"
+</Connect>
+ServerBmks = { } DelServerBmks = { }   time = 1771252311
+</ServerAcct>
+ | <ServerAcct>
+  Key = "gstps://alpha-beta-com"
+  TimeStamp = 1771252193
+Conn = <Connect>
+    Url = "gstps://alpha-beta-com.goodsync"
+    UserId = "alpha-beta-com"
+    UserEmail = "alpha@beta.com"
+    DisplayName = "alpha beta"
+</Connect>
+ServerBmks = { } DelServerBmks = { }   time = 1771252193
+</ServerAcct>
+ | <ServerAcct>
+  Key = "mtp://"
+  TimeStamp = 1771252193
+  Name = "Local Media"
+Conn = <Connect>
+    Url = "mtp://"
+</Connect>
+ServerBmks = { } DelServerBmks = { }   time = 1771252193
+</ServerAcct>
+ | <ServerAcct>
+  Key = "smbd://"
+  TimeStamp = 1771252193
+  Name = "(Windows Shares and other Devices)"
+Conn = <Connect>
+    Url = "smbd://"
+</Connect>
+ServerBmks = { } DelServerBmks = { }   time = 1771252193
+</ServerAcct>
+ | <ServerAcct>
+  Key = "smb://"
+  TimeStamp = 1771252193
+  Name = "Local Network"
+Conn = <Connect>
+    Url = "smb://"
+</Connect>
+ServerBmks = { | <AcctBmk>
+  Key = "192.168.3.110/ProgramData"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711699371
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.112/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746213116
+</AcctBmk>
+ | <AcctBmk>
+  Key = "h:/H/Vip Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1751389275
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.99/H/Vip Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1751389275
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.105/Drive H/Steam"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313456
+</AcctBmk>
+ | <AcctBmk>
+  Key = "vip12/Drive H"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771312896
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.111/Drive H/VIP Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313318
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/Drive H/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710686574
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.108/Drive H/VIP Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.104/Local/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710841566
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.105/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771254473
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.107/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771312520
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.121/Drive H/Steam/steamapps"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1749636644
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.112/Local/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1712342426
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.104/Drive H/Vip Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313063
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.104/warzone"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710754844
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.102/Drive H/VIP Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.113/Drive H/Vip Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313024
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.121/Drive H/Vip Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1750155213
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/Drive H/Riot Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711270327
+</AcctBmk>
+ | <AcctBmk>
+  Key = "vip12/ProgramData"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771312944
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.111/Drive H/Vip Games/Warcraft III_old_dota"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1751390206
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.108/Drive H/Steam/steamapps/workshop"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771311195
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.106/Drive H/Epic Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.104/Drive H/VIP Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/ProgramData"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711699188
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.106/ProgramData/Epic"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.111/Drive H/Steam"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313634
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.107/ProgramData"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710854949
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.113/Drive H/Steam/steamapps/workshop"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771253914
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.110/ProgramData/Epic"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/Drive H"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771312631
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.112/Drive C/Users/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.108/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711699443
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.121/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771492769
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.113/Drive H/Epic Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.113/Drive H"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771312436
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.110/Drive H/VIP Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.105/Drive H/Vip Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313234
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.121/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1747643192
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.106/Drive H/Steam/steamapps/workshop"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771311175
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.108/Drive H/Epic Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "vip12/Drive H/Steam"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313658
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.107/Drive C/Users/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.107/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710687619
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.108/Drive H"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771312557
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.104/Drive H/Steam/steamapps"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.107/Drive H/VIP Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313264
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.110/Drive H/Riot Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711273791
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.99/Vip Games/Warcraft III_old_dota"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1751390293
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.104/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711013419
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.105/Local/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710841468
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.104/ProgramData"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711728340
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.112/Drive H/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1712342345
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/Local/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710841121
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.105/Drive H/Riot Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711271372
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.107/Drive H/VIP Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/Drive H/Steam/steamapps"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.113/Local/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1712336864
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.121/Drive H"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771492813
+</AcctBmk>
+ | <AcctBmk>
+  Key = "vip12/Drive H/Vip Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313342
+</AcctBmk>
+ | <AcctBmk>
+  Key = "vip03/Drive H/Epic Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771253286
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.101/Drive H/VIP Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/Drive H/HoYoPlay"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.112/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711699298
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.112/Drive H/Riot Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711273739
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.108/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771312576
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.112/ProgramData"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711699332
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.104/Drive H/test"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1774108585
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.107/ProgramData/Epic"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/ProgramData/Riot Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711627639
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.107/Drive H/Riot Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711271402
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.110/Drive C/Users/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.108/Drive H/Vip Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313278
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.110/Drive H/Steam"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313602
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.105/Drive H/Steam/steamapps"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.104/Drive H/Epic Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.106/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711699662
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.101/ProgramData"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "vip12/Drive H/Steam/steamapps/workshop"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771311269
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.111/Drive H/Epic Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.111/Drive H/Steam/steamapps"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.111/ProgramData"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711699233
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.111/Roaming"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1715846297
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.106/Local/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1713358618
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.107/Drive H/Steam/steamapps"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.121/ProgramData"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1749360592
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.110/Local/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1713360107
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/Drive H/Steam/steamapps/workshop"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771310646
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.121/Drive H/Vip Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771513541
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.105/Drive H/Epic Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.106/Drive H/VIP Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.110/Drive H/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1713360044
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.111/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771312823
+</AcctBmk>
+ | <AcctBmk>
+  Key = "vip03/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771253362
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.113/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1712337241
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.110/Users/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771431087
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.113/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771253443
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.110/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711699403
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.103/Drive H/Steam/steamapps/Common/Counter-Strike Global Offensive"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1709898426
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.104/ProgramData/Epic"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.110/Drive H"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771312730
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.108/ProgramData/Epic"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.108/ProgramData"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711699474
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.112/Drive H/VIP Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.112/Drive H/Epic Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.105/Resources/Call of Duty"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710484215
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.112/ProgramData/Epic"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.106/ProgramData"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711699631
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.105/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.107/Drive H/Steam/steamapps/workshop"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771255031
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.112/Drive H/Steam/steamapps"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.107/Drive H/Epic Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.105/Drive H"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771254416
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771312656
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.105/Drive C/Users/Gamer/AppData/Roaming"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1715845329
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/Roaming"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1715845750
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/Drive H/Steam"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313573
+</AcctBmk>
+ | <AcctBmk>
+  Key = "h:/H/Vip Games/Warcraft III_old_dota"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1751390206
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.104/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771311723
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.106/Drive H/Vip Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313251
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.108/Drive H/Steam/steamapps"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.106/Drive H/Steam"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313482
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.106/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771312457
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/Drive H/VIP Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.111/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1712343441
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.104/Drive H"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771437036
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.105/Drive H/Steam/steamapps/workshop"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771254706
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.104/Drive H/Riot Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711273834
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/Drive H/Epic Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.101/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.106/Drive H/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1713358688
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.105/ProgramData"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711653530
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.101/Drive H/Epic Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.110/Drive H/Steam/steamapps/workshop"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771255080
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.107/Local/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710840924
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.121/Drive H/Epic Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1747643074
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.107/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711699111
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.111/Local/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710841157
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.111/Drive H/Riot Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711271320
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.113/Drive C/Users/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.107/Roaming"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1715845528
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.106/Drive H/Riot Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711274983
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.105/Drive H/VIP Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.113/ProgramData"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1715844165
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.107/Drive H/Steam"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313507
+</AcctBmk>
+ | <AcctBmk>
+  Key = "vip12/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771312925
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.105/ProgramData/Epic"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.110/Drive H/Vip Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313306
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/ProgramData/Epic"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.104/Drive H/Steam"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313428
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.108/Drive C/Users/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.101/Drive H/Steam/steamapps"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.110/Drive H/Steam/steamapps"
+Opts = <FolderOptions>
+    NoGsData = Yes
+</FolderOptions>
+  time = 1749890037
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.113/ProgramData/Epic"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.111/Drive H/VIP Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.104/Drive H/Steam/steamapps/workshop"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771255002
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.107/Drive H"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771312500
+</AcctBmk>
+ | <AcctBmk>
+  Key = "h:/Vip Games/Warcraft III_old_dota"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1751390293
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711628617
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/Drive H/VIP Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313294
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.121/Drive H/Steam/steamapps/workshop"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771493031
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.110/Drive H/Epic Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.108/Drive H/Riot Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711699573
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.99/H/Vip Games/Warcraft III_old_dota"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1751390206
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.106/Drive H/Riot Games/VALORANT"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.111/Drive H"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771312794
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.109/Drive C/Users/Gamer/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.105/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710688363
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.113/Drive H/VIP Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711000810
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.108/Drive H/Steam"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313544
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.106/Drive H/Steam/steamapps"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.111/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711699264
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.106/Drive H"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771429730
+</AcctBmk>
+ } DelServerBmks = { }   time = 1771252193
+</ServerAcct>
+ | <ServerAcct>
+  Key = "gstps://2biachatkon-gmail-com"
+  TimeStamp = 1771252311
+Conn = <Connect>
+    Url = "gstps://2biachatkon-gmail-com.goodsync"
+    UserId = "2biachatkon-gmail-com"
+    UserEmail = "2biachatkon@gmail.com"
+    DisplayName = "99_Exir-server"
+</Connect>
+ServerBmks = { } DelServerBmks = { }   time = 1771252311
+</ServerAcct>
+ | <ServerAcct>
+  Key = "smb://exir@192.168.3.113-n1"
+  TimeStamp = 1771252311
+Conn = <Connect>
+    Url = "smb://192.168.3.113"
+    UserId = "exir"
+</Connect>
+ServerBmks = { | <AcctBmk>
+  Key = "/Drive H/HoYoPlay"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/Drive H/Epic Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710858009
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/Drive H/Riot Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711271546
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/ProgramData"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710858168
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710858103
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/Roaming"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1715845458
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/Drive H/Steam"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ } DelServerBmks = { | <DelThing>
+  name = "/Local/Battle.net"
+  time = 1746171343
+</DelThing>
+ | <DelThing>
+  name = "/Drive H/Riot Games/VALORANT"
+  time = 1746171343
+</DelThing>
+ | <DelThing>
+  name = "/ProgramData/Epic"
+  time = 1746171343
+</DelThing>
+ }   time = 1771252311
+</ServerAcct>
+ | <ServerAcct>
+  Key = "wd://"
+  TimeStamp = 1771252193
+  Name = "Local WD Devices"
+Conn = <Connect>
+    Url = "wd://"
+</Connect>
+ServerBmks = { } DelServerBmks = { }   time = 1771252193
+</ServerAcct>
+ | <ServerAcct>
+  Key = "afpd://"
+  TimeStamp = 1771252193
+  Name = "Local Network (AFP)"
+Conn = <Connect>
+    Url = "afpd://"
+</Connect>
+ServerBmks = { } DelServerBmks = { }   time = 1771252193
+</ServerAcct>
+ | <ServerAcct>
+  Key = "gstore://2biachatkon-gmail-com"
+  TimeStamp = 1771252311
+Conn = <Connect>
+    Url = "gstore://2biachatkon-gmail-com.goodsync"
+    UserId = "2biachatkon-gmail-com"
+    UserEmail = "2biachatkon@gmail.com"
+    DisplayName = "99_Exir-server"
+</Connect>
+ServerBmks = { } DelServerBmks = { }   time = 1771252311
+</ServerAcct>
+ | <ServerAcct>
+  Key = "gstore://alpha-beta-com"
+  TimeStamp = 1771252193
+Conn = <Connect>
+    Url = "gstore://alpha-beta-com.goodsync"
+    UserId = "alpha-beta-com"
+    UserEmail = "alpha@beta.com"
+    DisplayName = "alpha beta"
+</Connect>
+ServerBmks = { } DelServerBmks = { }   time = 1771252193
+</ServerAcct>
+ | <ServerAcct>
+  Key = "file://@"
+  TimeStamp = 1771252193
+  Name = "Local"
+Conn = <Connect>
+    Url = "file://"
+</Connect>
+ServerBmks = { | <AcctBmk>
+  Key = "/C:/ProgramData"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710854949
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/=Diskless:/4"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1748802004
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/H:/Epic Games"
+Opts = <FolderOptions>
+    NoGsData = Yes
+</FolderOptions>
+  time = 1714928968
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/H:/Steam/steamapps/Common/Counter-Strike Global Offensive"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1709898196
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/H:/Vip Games/Warcraft III_old_dota"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1751390236
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/H:/Riot Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711270327
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/C:/ProgramData/Riot Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711627639
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/C:/ProgramData/Epic"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/C:/Users/Exir/AppData/Roaming"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1715845329
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/H:/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710686256
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/C:/Users/Exir/AppData/Local/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710840924
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.99/Epic Games"
+Opts = <FolderOptions>
+    NoGsData = Yes
+</FolderOptions>
+  time = 1714928968
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.99/Steam/steamapps/Common/Counter-Strike Global Offensive"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1709898196
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/D:/Games/Battle.net/Call of Duty"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/H:/Steam"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771253718
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/H:/Transfer"
+Opts = <FolderOptions>
+    NoGsData = Yes
+</FolderOptions>
+  time = 1774108395
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.99/Steam/steamapps"
+Opts = <FolderOptions>
+    NoGsData = Yes
+</FolderOptions>
+  time = 1749890037
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.99/Games/Vip Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/H:/Steam/steamapps/workshop"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771253914
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.99/Riot Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1711270327
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/C:/Users/Exir/AppData/Local"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/H:/Steam/steamapps"
+Opts = <FolderOptions>
+    NoGsData = Yes
+</FolderOptions>
+  time = 1749890037
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.99/Vip Games/Warcraft III_old_dota"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1751390236
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.99/Vip Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/H:/Vip Games"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771313024
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.99/Battle.net"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1710686256
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/=Diskless:/1"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1748799226
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.99/HoYoPlay"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/=Diskless:/2"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1748799226
+</AcctBmk>
+ | <AcctBmk>
+  Key = "192.168.3.99/Riot Games/VALORANT"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/=Diskless:/3"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1748801985
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/H:/Games/Vip Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/H:/Riot Games/VALORANT"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 0
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/H:/HoYoPlay"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/H:/Vip Games/Zula"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1746174161
+</AcctBmk>
+ | <AcctBmk>
+  Key = "/H:"
+Opts = <FolderOptions>
+</FolderOptions>
+  time = 1771311665
+</AcctBmk>
+ } DelServerBmks = { }   time = 1771252193
+</ServerAcct>
+ } DelServers = { } Bookmarks = { } DelBookmarks = { } </AccountManager>
+Jobs = { | <Job>
+Name = "01_Fort"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///H:"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/H:"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.121/Drive H"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.121/Drive H"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771492813
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic Games"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "01_Fort_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.121/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.121/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771492769
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FortniteGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "01_Fort_ProgramData"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/ProgramData"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.121/ProgramData"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.121/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771492789
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "03_Fort"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///H:"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/H:"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.113/Drive H"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.113/Drive H"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312996
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic Games"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "03_Fort_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.113/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.113/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771256016
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+  ShowFiles = Yes
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FortniteGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "03_Fort_ProgramData"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/ProgramData"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.113/ProgramData"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.113/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771256051
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "04_Fort"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///H:"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/H:"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.104/Drive H"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.104/Drive H"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771437036
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic Games"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "04_Fort_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.104/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.104/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771311723
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FortniteGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "04_Fort_ProgramData"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/ProgramData"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.104/ProgramData"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.104/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771311745
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+  ShowFiles = Yes
+Included = <FileMask>
+Matches = (
+    "path /Epic"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "05_Fort"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///H:"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/H:"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.105/Drive H"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.105/Drive H"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312339
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic Games"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "05_Fort_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.105/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.105/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312366
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+  ShowFiles = Yes
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FortniteGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "05_Fort_ProgramData"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/ProgramData"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.105/ProgramData"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.105/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312408
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "06_Fort"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///H:"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/H:"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.106/Drive H"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.106/Drive H"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771429760
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic Games"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "06_Fort_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.106/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.106/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312457
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FortniteGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "06_Fort_ProgramData"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/ProgramData"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.106/ProgramData"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.106/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312477
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+  ShowFiles = Yes
+Included = <FileMask>
+Matches = (
+    "path /Epic"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "07_Fort"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///H:"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/H:"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.107/Drive H"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.107/Drive H"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312500
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic Games"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "07_Fort_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.107/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.107/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312520
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FortniteGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "07_Fort_ProgramData"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/ProgramData"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.107/ProgramData"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.107/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312537
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+  ShowFiles = Yes
+Included = <FileMask>
+Matches = (
+    "path /Epic"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "08_Fort"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///H:"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/H:"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.108/Drive H"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.108/Drive H"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312557
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic Games"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "08_Fort_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.108/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.108/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312576
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FortniteGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "08_Fort_ProgramData"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/ProgramData"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.108/ProgramData"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.108/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312593
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "09_Fort"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///H:"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/H:"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.109/Drive H"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.109/Drive H"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312631
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic Games"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "09_Fort_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.109/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.109/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312656
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FortniteGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "09_Fort_ProgramData"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/ProgramData"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.109/ProgramData"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.109/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312676
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "10_Fort"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///H:"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/H:"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.110/Drive H"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.110/Drive H"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771431117
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic Games"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "10_Fort_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.110/Users/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.110/Users/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771431087
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FortniteGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "10_Fort_ProgramData"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/ProgramData"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.110/ProgramData"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.110/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312745
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "11_Fort"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///H:"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/H:"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.111/Drive H"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.111/Drive H"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312794
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic Games"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "11_Fort_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.111/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.111/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312823
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FortniteGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "11_Fort_ProgramData"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/ProgramData"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.111/ProgramData"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.111/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312838
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "12_Fort"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///H:"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/H:"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://vip12/Drive H"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "vip12/Drive H"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312896
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic Games"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "12_Fort_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://vip12/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "vip12/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312925
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FortniteGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "12_Fort_ProgramData"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/ProgramData"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://vip12/ProgramData"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "vip12/ProgramData"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312944
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /Epic"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+  | <Job>
+Name = "01_FallGuys_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.121/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.121/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771492769
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FallGuysGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "03_FallGuys_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.113/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.113/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771256016
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+  ShowFiles = Yes
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FallGuysGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "04_FallGuys_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.104/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.104/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771311723
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FallGuysGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "05_FallGuys_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.105/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.105/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312366
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+  ShowFiles = Yes
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FallGuysGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "06_FallGuys_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.106/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.106/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312457
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FallGuysGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "07_FallGuys_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.107/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.107/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312520
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FallGuysGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "08_FallGuys_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.108/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.108/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312576
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FallGuysGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "09_FallGuys_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.109/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.109/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312656
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FallGuysGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "10_FallGuys_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.110/Users/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.110/Users/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771431087
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FallGuysGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "11_FallGuys_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://192.168.3.111/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "192.168.3.111/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312823
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FallGuysGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+ | <Job>
+Name = "12_FallGuys_local"
+Side1 = <SideOptions>
+Conn = <Connect>
+    Url = "file:///C:/Users/Exir/AppData/Local"
+</Connect>
+  AcctKey = "file://@"
+  ServerDir = "/C:/Users/Exir/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+Side2 = <SideOptions>
+Conn = <Connect>
+    Url = "smb://vip12/Gamer/AppData/Local"
+</Connect>
+  AcctKey = "smb://"
+  ServerDir = "vip12/Gamer/AppData/Local"
+  TimeStamp = 0
+</SideOptions>
+TimeStamp = 1771312925
+Direction = 1
+ReconnectSeconds = 120
+SyncParallelThreads = Yes
+WorkerThreads = 3
+DeleteEmptyFoldersMove = No
+Filters = <Filters>
+Included = <FileMask>
+Matches = (
+    "path /EpicGamesLauncher"
+    "path /FallGuysGame"
+) </FileMask>
+Excluded = <FileMask>
+Matches = (
+) </FileMask>
+</Filters>
+OnFileChangeDelay = 20
+Schedule = <TimeSchedule>
+Minute = <RangeList>
+ObjList = (  | <IntRange>
+    from = 0
+    to = 0
+    step = 1
+</IntRange>
+ ) </RangeList>
+Hour = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfWeek = <RangeList>
+ObjList = (  ) </RangeList>
+DayOfMonth = <RangeList>
+ObjList = (  ) </RangeList>
+Month = <RangeList>
+ObjList = (  ) </RangeList>
+</TimeSchedule>
+LimitChanges = No
+CopyCreateTime = Yes
+CopyExtendedAttrs = No
+LinksOption = 1
+</Job>
+} DelJobs = { } Groups = { | <Group>
+Name = "Fortnite"
+Type = 4
+TimeStamp = 1771430669
+JobsInGroup = { | "07_Fort"
+ | "08_Fort_ProgramData"
+ | "06_Fort"
+ | "01_Fort_local"
+ | "03_Fort_ProgramData"
+ | "05_Fort"
+ | "08_Fort_local"
+ | "04_Fort"
+ | "09_Fort_ProgramData"
+ | "10_Fort_local"
+ | "03_Fort"
+ | "05_Fort_local"
+ | "04_Fort_ProgramData"
+ | "12_Fort"
+ | "01_Fort"
+ | "09_Fort_local"
+ | "11_Fort"
+ | "10_Fort"
+ | "05_Fort_ProgramData"
+ | "11_Fort_local"
+ | "06_Fort_local"
+ | "10_Fort_ProgramData"
+ | "06_Fort_ProgramData"
+ | "03_Fort_local"
+ | "11_Fort_ProgramData"
+ | "12_Fort_local"
+ | "01_Fort_ProgramData"
+ | "07_Fort_local"
+ | "07_Fort_ProgramData"
+ | "09_Fort"
+ | "12_Fort_ProgramData"
+ | "04_Fort_local"
+ | "08_Fort"
+ } TimerIntervalHours = 2
+</Group>
+ | <Group>
+Name = "FallGuys"
+Type = 4
+TimeStamp = 1771430669
+JobsInGroup = {  | "01_Fort"
+ | "01_FallGuys_local"
+ | "01_Fort_ProgramData"
+ | "03_Fort"
+ | "03_FallGuys_local"
+ | "03_Fort_ProgramData"
+ | "04_Fort"
+ | "04_FallGuys_local"
+ | "04_Fort_ProgramData"
+ | "05_Fort"
+ | "05_FallGuys_local"
+ | "05_Fort_ProgramData"
+ | "06_Fort"
+ | "06_FallGuys_local"
+ | "06_Fort_ProgramData"
+ | "07_Fort"
+ | "07_FallGuys_local"
+ | "07_Fort_ProgramData"
+ | "08_Fort"
+ | "08_FallGuys_local"
+ | "08_Fort_ProgramData"
+ | "09_Fort"
+ | "09_FallGuys_local"
+ | "09_Fort_ProgramData"
+ | "10_Fort"
+ | "10_FallGuys_local"
+ | "10_Fort_ProgramData"
+ | "11_Fort"
+ | "11_FallGuys_local"
+ | "11_Fort_ProgramData"
+ | "12_Fort"
+ | "12_FallGuys_local"
+ | "12_Fort_ProgramData"
+} TimerIntervalHours = 2
+</Group>
+ } DelGroups = { } </GoodSyncSettings>
