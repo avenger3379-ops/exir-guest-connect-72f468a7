@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Power, RotateCw, LogOut, Zap, KeyRound } from "lucide-react";
+import { Power, RotateCw, LogOut, Zap, KeyRound, ChevronDown, ChevronUp } from "lucide-react";
 import { sendPower, loadPowerCreds, savePowerCreds, type PowerAction } from "@/lib/power";
 
 const ACTIONS: { key: PowerAction; label: string; icon: React.ReactNode; accent: string; confirm?: boolean }[] = [
