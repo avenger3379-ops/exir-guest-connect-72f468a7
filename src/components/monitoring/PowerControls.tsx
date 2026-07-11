@@ -45,10 +45,21 @@ export function PowerControls({ machine }: { machine: string }) {
 
   return (
     <div className="mt-4">
-      <div className="mb-1.5 flex items-center justify-between">
-        <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-          ▸ power control
-        </div>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between rounded-md border border-border/60 bg-surface/40 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground transition hover:border-cyan-500/60 hover:text-cyan-300"
+      >
+        <span className="flex items-center gap-1.5">
+          <Power size={11} /> ▸ power control
+        </span>
+        <span className="flex items-center gap-1 text-[9px]">
+          {open ? "hide" : "show"} {open ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+        </span>
+      </button>
+
+      {!open ? null : (
+      <>
+      <div className="mb-1.5 mt-2 flex items-center justify-end">
         <button
           onClick={() => setShowCreds((s) => !s)}
           title="Admin credentials (needed to bypass 'Access is denied 5')"
