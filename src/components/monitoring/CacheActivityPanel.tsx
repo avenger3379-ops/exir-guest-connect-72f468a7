@@ -68,6 +68,12 @@ export function CacheActivityPanel() {
     window.dispatchEvent(new CustomEvent(CACHE_EVT));
   }, [perClient]);
 
+  // Publish raw parsed lines for EpicCdnDiscovery.
+  useEffect(() => {
+    (window as unknown as { __exirCacheLines?: CacheLine[] }).__exirCacheLines = lines;
+    window.dispatchEvent(new CustomEvent(CACHE_LINES_EVT));
+  }, [lines]);
+
   const summary = useMemo(() => {
     const arr = Object.values(perClient);
     const active = arr.filter((x) => x.mode !== "idle").length;
