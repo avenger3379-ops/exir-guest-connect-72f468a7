@@ -25,6 +25,7 @@ import { GamePlatformsPanel } from "@/components/monitoring/GamePlatformsPanel";
 import { ReservationBoard } from "@/components/monitoring/ReservationBoard";
 import { DailyReport } from "@/components/monitoring/DailyReport";
 import { CacheActivityPanel } from "@/components/monitoring/CacheActivityPanel";
+import { EpicCdnDiscovery } from "@/components/monitoring/EpicCdnDiscovery";
 import { loadReservations, remainingMinutes, defaultSeats } from "@/lib/reservations";
 import { loadLogo } from "@/lib/branding";
 
@@ -304,8 +305,13 @@ function Dashboard() {
           />
         </section>
 
-        {/* Steam & Epic platform status */}
+        {/* Epic CDN Discovery — above launcher status */}
         <section className="mt-5">
+          <EpicCdnDiscovery />
+        </section>
+
+        {/* Steam & Epic platform status */}
+        <section className="mt-3">
           <SteamEpicStatus />
         </section>
 

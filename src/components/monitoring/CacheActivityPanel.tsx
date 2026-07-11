@@ -13,9 +13,9 @@ import {
 const POLL_MS = 3000;
 const WINDOW_MS = 15_000;
 const MAX_KEEP = 800;
-
 // Broadcast per-client cache state so ClientCard can subscribe.
 export const CACHE_EVT = "exir:cache-clients";
+export const CACHE_LINES_EVT = "exir:cache-lines";
 
 export function CacheActivityPanel() {
   const [cfg, setCfg] = useState<CacheSshConfig>(() => loadCacheSsh());
@@ -67,6 +67,12 @@ export function CacheActivityPanel() {
     (window as unknown as { __exirCache?: Record<string, ClientCache> }).__exirCache = perClient;
     window.dispatchEvent(new CustomEvent(CACHE_EVT));
   }, [perClient]);
+
+  // Publish raw parsed lines for EpicCdnDiscovery.
+  useEffect(() => {
+    (window as unknown as { __exirCacheLines?: CacheLine[] }).__exirCacheLines = lines;
+    window.dispatchEvent(new CustomEvent(CACHE_LINES_EVT));
+  }, [lines]);
 
   const summary = useMemo(() => {
     const arr = Object.values(perClient);

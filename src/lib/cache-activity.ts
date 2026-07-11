@@ -44,6 +44,7 @@ export interface CacheLine {
   service: string;   // steam / epic / riot / blizzard / origin / ...
   bytes: number;
   url: string;
+  host: string;      // CDN hostname (e.g. cloudflare.epicgamescdn.com)
   raw: string;
 }
 
@@ -52,7 +53,6 @@ export interface CacheLine {
 // Also standard nginx: ip - - [time] "GET url" 200 bytes "-" "UA"
 export function parseCacheLine(raw: string): CacheLine | null {
   if (!raw || !raw.trim()) return null;
-  // service in leading [brackets]
   const svcM = raw.match(/^\[([^\]]+)\]/);
   const service = svcM ? svcM[1] : "unknown";
   const rest = svcM ? raw.slice(svcM[0].length).trimStart() : raw;
@@ -70,7 +70,18 @@ export function parseCacheLine(raw: string): CacheLine | null {
     : s === "MISS" || s === "EXPIRED" || s === "BYPASS" ? "MISS" : "-";
   const bytesM = rest.match(/"\s(\d{3})\s+(\d+)/);
   const bytes = bytesM ? Number(bytesM[2]) : 0;
-  return { t, ip, service, status, bytes, url, raw };
+  // Host: prefer last quoted token that looks like a hostname, else parse from URL.
+  let host = "";
+  const quoted = Array.from(rest.matchAll(/"([^"]+)"/g)).map((m) => m[1]);
+  for (let i = quoted.length - 1; i >= 0; i--) {
+    const q = quoted[i];
+    if (/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(q)) { host = q.toLowerCase(); break; }
+  }
+  if (!host && url) {
+    const uM = url.match(/^https?:\/\/([^/]+)/i);
+    if (uM) host = uM[1].toLowerCase();
+  }
+  return { t, ip, service, status, bytes, url, host, raw };
 }
 
 export type CacheMode = "hit" | "miss" | "mixed" | "idle";
