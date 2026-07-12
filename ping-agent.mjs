@@ -211,6 +211,27 @@ const server = createServer((req, res) => {
     return;
   }
 
+  // ── GoodSync deploy (Fortnite / FallGuys) ────────────────────────────
+  if (req.method === "POST" && (req.url === "/goodsync/start" || req.url === "/goodsync/cancel" || req.url === "/goodsync/share")) {
+    let body = "";
+    const url = req.url;
+    req.on("data", (c) => { body += c; if (body.length > 10_000) req.destroy(); });
+    req.on("end", () => {
+      const p =
+        url === "/goodsync/start"  ? handleGsStart(body)  :
+        url === "/goodsync/cancel" ? handleGsCancel(body) :
+                                     handleGsShare(body);
+      void p
+        .then((r) => { res.writeHead(200, { ...CORS, "Content-Type": "application/json" }); res.end(JSON.stringify(r)); })
+        .catch((e) => { res.writeHead(200, { ...CORS, "Content-Type": "application/json" }); res.end(JSON.stringify({ ok: false, error: String(e?.message || e) })); });
+    });
+    return;
+  }
+  if (req.method === "GET" && req.url === "/goodsync/status") {
+    res.writeHead(200, { ...CORS, "Content-Type": "application/json" });
+    return res.end(JSON.stringify({ ok: true, jobs: listGsJobs() }));
+  }
+
   res.writeHead(404, CORS);
   res.end();
 });
