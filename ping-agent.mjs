@@ -366,7 +366,13 @@ const TIER_LIMIT = {
 };
 
 async function handleQos(body) {
-  const { machine, enabled, tier } = JSON.parse(body || "{}");
+  const parsed = JSON.parse(body || "{}");
+  const backend = parsed.backend || "mikrotik";
+  if (backend === "netlimiter") return handleQosNetLimiter(parsed);
+  return handleQosMikrotik(parsed);
+}
+
+async function handleQosMikrotik({ machine, enabled, tier }) {
   const host = process.env.MIKROTIK_HOST;
   const user = process.env.MIKROTIK_USER;
   const pass = process.env.MIKROTIK_PASS;
@@ -383,37 +389,97 @@ async function handleQos(body) {
     headers: { Authorization: auth, "Content-Type": "application/json" },
     body: payload ? JSON.stringify(payload) : undefined,
   });
-  // Ignore self-signed cert issues on the LAN router.
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
-  // Find existing queue for this station.
   const listRes = await fetch(
     `${base}/queue/simple?name=${encodeURIComponent(queueName)}`,
     opts("GET"),
   );
   const list = listRes.ok ? await listRes.json() : [];
   const existing = Array.isArray(list) && list[0];
-
   const limit = enabled && tier !== "off" && tier !== "UNL" ? TIER_LIMIT[tier] : null;
   const disabled = !enabled || tier === "off";
-
   if (existing) {
-    const payload = {
-      target,
-      "max-limit": limit || "0/0",
-      disabled: disabled || !limit ? "true" : "false",
-    };
+    const payload = { target, "max-limit": limit || "0/0", disabled: disabled || !limit ? "true" : "false" };
     await fetch(`${base}/queue/simple/${existing[".id"]}`, opts("PATCH", payload));
   } else {
-    const payload = {
-      name: queueName,
-      target,
-      "max-limit": limit || "0/0",
-      disabled: disabled || !limit ? "true" : "false",
-    };
+    const payload = { name: queueName, target, "max-limit": limit || "0/0", disabled: disabled || !limit ? "true" : "false" };
     await fetch(`${base}/queue/simple`, opts("PUT", payload));
   }
-  return { ok: true, machine, tier, limit: limit || "unlimited" };
+  return { ok: true, backend: "mikrotik", machine, tier, limit: limit || "unlimited" };
+}
+
+// NetLimiter Pro 4 tier → bytes/sec (per direction). "UNL" disables the rule.
+const NL_TIER_BPS = {
+  "500K": 500 * 1024 / 8,   // 500 kbit/s → 64000 B/s
+  "1M":   1 * 1024 * 1024 / 8,
+  "2M":   2 * 1024 * 1024 / 8,
+};
+
+// Runs nlq.exe on the target VIP over PsExec. Expects a per-tier rule already
+// created on each client (see Setup-NetLimiter-Rules.ps1 shipped with the repo).
+// Rule names: Exir-500K, Exir-1M, Exir-2M, Exir-UNL. Only one is enabled at a time.
+async function handleQosNetLimiter({ machine, enabled, tier }) {
+  const psexec = process.env.PSEXEC_PATH || "psexec.exe";
+  const nlq = process.env.NETLIMITER_NLQ || "C:\\Program Files\\Locktime Software\\NetLimiter 4\\nlq.exe";
+  const user = process.env.CLIENT_ADMIN_USER || process.env.MIKROTIK_USER;
+  const pass = process.env.CLIENT_ADMIN_PASS || process.env.MIKROTIK_PASS;
+  const nn = String(machine || "").replace(/\D/g, "").padStart(2, "0");
+  const host = process.env.CLIENT_SUBNET
+    ? `${process.env.CLIENT_SUBNET}${nn}`
+    : `${process.env.MIKROTIK_SUBNET || "192.168.3.1"}${nn}`;
+  const machineHost = machine || `VIP${nn}`; // psexec accepts hostname too
+
+  const tiers = ["500K", "1M", "2M", "UNL"];
+  const activeTier = enabled && tier !== "off" ? tier : null;
+
+  // Build a batch of nlq calls: disable all rules first, then enable the active one.
+  // nlq.exe SetLimit /rule="<name>" /dir=both /enable=<0|1> /limit=<bytes>
+  const cmds = [];
+  for (const t of tiers) {
+    cmds.push({ rule: `Exir-${t}`, enable: 0, limit: 0 });
+  }
+  if (activeTier === "UNL") {
+    cmds.push({ rule: "Exir-UNL", enable: 1, limit: 0 });
+  } else if (activeTier) {
+    const bps = Math.round(NL_TIER_BPS[activeTier] || 0);
+    cmds.push({ rule: `Exir-${activeTier}`, enable: 1, limit: bps });
+  }
+
+  const results = [];
+  for (const c of cmds) {
+    const args = [
+      "-accepteula", "-nobanner",
+      `\\\\${host}`,
+      ...(user ? ["-u", user] : []),
+      ...(pass ? ["-p", pass] : []),
+      "-h", "-d",
+      nlq, "SetLimit",
+      `/rule=${c.rule}`, "/dir=both", `/enable=${c.enable}`, `/limit=${c.limit}`,
+    ];
+    // eslint-disable-next-line no-await-in-loop
+    const r = await new Promise((resolve) => {
+      execFile(psexec, args, { timeout: 15000, windowsHide: true }, (err, _stdout, stderr) => {
+        if (err && err.code === "ENOENT") {
+          return resolve({ rule: c.rule, ok: false, error: "psexec not found (set PSEXEC_PATH or install PsExec)" });
+        }
+        if (err) return resolve({ rule: c.rule, ok: false, error: (stderr || err.message || "").toString().slice(0, 200) });
+        resolve({ rule: c.rule, ok: true });
+      });
+    });
+    results.push(r);
+    if (!r.ok && r.error?.includes("psexec not found")) break;
+  }
+
+  const ok = results.every((r) => r.ok);
+  return {
+    ok,
+    backend: "netlimiter",
+    machine: machineHost,
+    host,
+    tier: activeTier || "off",
+    limit_bps: activeTier && activeTier !== "UNL" ? Math.round(NL_TIER_BPS[activeTier]) : (activeTier === "UNL" ? "unlimited" : 0),
+    results,
+  };
 }
 
 server.listen(PORT, "127.0.0.1", () => {
