@@ -74,6 +74,32 @@ export function QosLaunch({ machines }: Props) {
           ▸ qos · internet control
         </h3>
         <div className="flex items-center gap-2">
+          <div className="flex items-center rounded-md border border-border/60 bg-surface/60 p-0.5 font-mono text-[9px] uppercase tracking-wider">
+            <button
+              onClick={() => changeBackend("mikrotik")}
+              title="Apply QoS via MikroTik simple-queue REST API"
+              className="flex items-center gap-1 rounded px-1.5 py-0.5 transition"
+              style={{
+                background: backend === "mikrotik" ? "oklch(0.85 0.18 200 / 0.15)" : "transparent",
+                color: backend === "mikrotik" ? "var(--neon-cyan)" : "var(--muted-foreground, #888)",
+                boxShadow: backend === "mikrotik" ? "0 0 6px oklch(0.85 0.18 200 / 0.4)" : "none",
+              }}
+            >
+              <Router size={10} /> mikrotik
+            </button>
+            <button
+              onClick={() => changeBackend("netlimiter")}
+              title="Apply QoS via NetLimiter Pro 4 on the target VIP (nlq.exe over PsExec)"
+              className="flex items-center gap-1 rounded px-1.5 py-0.5 transition"
+              style={{
+                background: backend === "netlimiter" ? "oklch(0.7 0.25 320 / 0.18)" : "transparent",
+                color: backend === "netlimiter" ? "var(--neon-magenta)" : "var(--muted-foreground, #888)",
+                boxShadow: backend === "netlimiter" ? "0 0 6px oklch(0.7 0.25 320 / 0.4)" : "none",
+              }}
+            >
+              <MonitorCog size={10} /> netlimiter
+            </button>
+          </div>
           <button
             onClick={() => setColorEdit((v) => !v)}
             className="rounded border border-border/60 bg-surface/60 px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground transition hover:border-cyan-500/50 hover:text-cyan-300"
