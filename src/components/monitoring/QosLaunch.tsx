@@ -31,7 +31,13 @@ export function QosLaunch({ machines }: Props) {
   const [colors, setColors] = useState<QosColors>(() => loadQosColors());
   const [openId, setOpenId] = useState<string | null>(null);
   const [colorEdit, setColorEdit] = useState(false);
+  const [backend, setBackend] = useState<QosBackend>(() => loadQosBackend());
   const rootRef = useRef<HTMLDivElement>(null);
+
+  function changeBackend(b: QosBackend) {
+    setBackend(b);
+    saveQosBackend(b);
+  }
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
