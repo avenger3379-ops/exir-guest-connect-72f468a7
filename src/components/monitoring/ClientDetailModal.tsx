@@ -3,6 +3,7 @@ import { Database, Zap, Cloud } from "lucide-react";
 import type { ClientStatus } from "@/lib/monitoring-types";
 import { MetricBar } from "./MetricBar";
 import { PowerControls } from "./PowerControls";
+import { GoodSyncPanel } from "./GoodSyncPanel";
 import { getMachine, launchVnc, loadVncConfig } from "@/lib/vnc-config";
 import { loadSettings, type GaugeSettings } from "@/lib/gauge-settings";
 import { ipFromMachine, type ClientCache } from "@/lib/cache-activity";
@@ -128,6 +129,7 @@ export function ClientDetailModal({ client, onClose }: Props) {
               </button>
             </div>
             <LanCacheBox cache={cache} ip={ipFromMachine(client.machine)} />
+            <GoodSyncPanel machine={client.machine} />
             <PowerControls machine={client.machine} />
           </>
         ) : (

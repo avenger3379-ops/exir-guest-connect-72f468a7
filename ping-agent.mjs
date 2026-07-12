@@ -211,6 +211,27 @@ const server = createServer((req, res) => {
     return;
   }
 
+  // ── GoodSync deploy (Fortnite / FallGuys) ────────────────────────────
+  if (req.method === "POST" && (req.url === "/goodsync/start" || req.url === "/goodsync/cancel" || req.url === "/goodsync/share")) {
+    let body = "";
+    const url = req.url;
+    req.on("data", (c) => { body += c; if (body.length > 10_000) req.destroy(); });
+    req.on("end", () => {
+      const p =
+        url === "/goodsync/start"  ? handleGsStart(body)  :
+        url === "/goodsync/cancel" ? handleGsCancel(body) :
+                                     handleGsShare(body);
+      void p
+        .then((r) => { res.writeHead(200, { ...CORS, "Content-Type": "application/json" }); res.end(JSON.stringify(r)); })
+        .catch((e) => { res.writeHead(200, { ...CORS, "Content-Type": "application/json" }); res.end(JSON.stringify({ ok: false, error: String(e?.message || e) })); });
+    });
+    return;
+  }
+  if (req.method === "GET" && req.url === "/goodsync/status") {
+    res.writeHead(200, { ...CORS, "Content-Type": "application/json" });
+    return res.end(JSON.stringify({ ok: true, jobs: listGsJobs() }));
+  }
+
   res.writeHead(404, CORS);
   res.end();
 });
@@ -480,6 +501,167 @@ async function handleQosNetLimiter({ machine, enabled, tier }) {
     limit_bps: activeTier && activeTier !== "UNL" ? Math.round(NL_TIER_BPS[activeTier]) : (activeTier === "UNL" ? "unlimited" : 0),
     results,
   };
+}
+
+// ── GoodSync CLI runner ─────────────────────────────────────────────────
+// Runs gs-runner.exe (GoodSync 10+ CLI) sequentially for the jobs mapped
+// to each VIP + game. Jobs must already exist in GoodSync (import the
+// shipped FortniteFallGuys-Combined.tix once on the operator PC).
+//
+// Job naming convention (see the .tix file):
+//   NN_Fort              → H:\Epic Games
+//   NN_Fort_local        → AppData\Local\{EpicGamesLauncher, FortniteGame}
+//   NN_Fort_ProgramData  → C:\ProgramData\Epic
+//   NN_FallGuys_local    → local FallGuys install
+// where NN is the two-digit VIP number.
+//
+// Configure via env (default path shown):
+//   GOODSYNC_PATH=C:\Program Files\Siber Systems\GoodSync\gs-runner.exe
+//
+// ShareEpicFolders.ps1 is spawned remotely via PsExec using the same
+// CLIENT_ADMIN_USER/PASS + CLIENT_SUBNET envs used by the power/qos flows.
+import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// key → { machine, game, jobs, proc, startedAt, finishedAt, running, ok, exitCode, lastLine, error }
+const GS_JOBS = new Map();
+const GS_MAX_HISTORY = 20;
+
+function vipNN(m) { return String(m || "").replace(/\D/g, "").padStart(2, "0"); }
+
+function jobsFor(machine, game) {
+  const nn = vipNN(machine);
+  if (game === "fortnite") return [`${nn}_Fort`, `${nn}_Fort_local`, `${nn}_Fort_ProgramData`];
+  if (game === "fallguys") return [`${nn}_FallGuys_local`];
+  return [];
+}
+
+function listGsJobs() {
+  return Array.from(GS_JOBS.values()).map((j) => ({
+    key: j.key, machine: j.machine, game: j.game, jobs: j.jobs,
+    startedAt: j.startedAt, finishedAt: j.finishedAt,
+    running: j.running, ok: j.ok, exitCode: j.exitCode,
+    lastLine: j.lastLine, error: j.error,
+  }));
+}
+
+function trimHistory() {
+  const finished = Array.from(GS_JOBS.values()).filter((j) => !j.running).sort((a, b) => (a.finishedAt || 0) - (b.finishedAt || 0));
+  while (finished.length > GS_MAX_HISTORY) {
+    const drop = finished.shift();
+    GS_JOBS.delete(drop.key);
+  }
+}
+
+async function handleGsStart(body) {
+  const { machine, game } = JSON.parse(body || "{}");
+  if (!machine || !game) return { ok: false, error: "machine and game required" };
+  const jobs = jobsFor(machine, game);
+  if (!jobs.length) return { ok: false, error: `unknown game ${game}` };
+
+  const gsPath = process.env.GOODSYNC_PATH || "C:\\Program Files\\Siber Systems\\GoodSync\\gs-runner.exe";
+  const key = `${machine}:${game}:${Date.now()}`;
+  const rec = {
+    key, machine, game, jobs, startedAt: Date.now(),
+    running: true, lastLine: `queued ${jobs.length} job(s)`,
+    proc: null, ok: undefined, exitCode: null, error: undefined, finishedAt: undefined,
+  };
+  GS_JOBS.set(key, rec);
+
+  // Run jobs sequentially so we can attribute a failure.
+  (async () => {
+    try {
+      for (const job of jobs) {
+        rec.lastLine = `sync ${job}`;
+        // gs-runner: sync <jobname> /exit — quiet CLI mode.
+        const args = ["sync", job, "/exit"];
+        const exit = await new Promise((resolve) => {
+          let proc;
+          try {
+            proc = spawn(gsPath, args, { windowsHide: true });
+          } catch (e) {
+            return resolve({ code: -1, err: String(e?.message || e) });
+          }
+          rec.proc = proc;
+          let last = "";
+          const onData = (d) => {
+            const s = d.toString().trim();
+            if (s) { last = s.split(/\r?\n/).pop() || last; rec.lastLine = `${job}: ${last.slice(0, 80)}`; }
+          };
+          proc.stdout?.on("data", onData);
+          proc.stderr?.on("data", onData);
+          proc.on("error", (e) => resolve({ code: -1, err: e.code === "ENOENT" ? `gs-runner not found at ${gsPath}` : e.message }));
+          proc.on("close", (code) => resolve({ code, err: null }));
+        });
+        rec.proc = null;
+        if (exit.err) throw new Error(exit.err);
+        if (exit.code !== 0) throw new Error(`${job} exited ${exit.code}`);
+      }
+      rec.ok = true; rec.exitCode = 0; rec.lastLine = `✓ all ${jobs.length} job(s) done`;
+    } catch (e) {
+      rec.ok = false; rec.error = String(e?.message || e); rec.exitCode = -1;
+    } finally {
+      rec.running = false; rec.finishedAt = Date.now();
+      trimHistory();
+    }
+  })();
+
+  return { ok: true, key, jobs };
+}
+
+async function handleGsCancel(body) {
+  const { key } = JSON.parse(body || "{}");
+  const rec = GS_JOBS.get(key);
+  if (!rec) return { ok: false, error: "unknown key" };
+  if (!rec.running) return { ok: true, note: "already finished" };
+  try { rec.proc?.kill("SIGTERM"); } catch { /* ignore */ }
+  rec.running = false;
+  rec.ok = false;
+  rec.error = "cancelled";
+  rec.finishedAt = Date.now();
+  return { ok: true };
+}
+
+async function handleGsShare(body) {
+  const { machine } = JSON.parse(body || "{}");
+  if (!machine) return { ok: false, error: "machine required" };
+  if (platform() !== "win32") return { ok: false, error: "requires Windows operator PC" };
+
+  const nn = vipNN(machine);
+  const host = process.env.CLIENT_SUBNET
+    ? `${process.env.CLIENT_SUBNET}${nn}`
+    : `${process.env.MIKROTIK_SUBNET || "192.168.3.1"}${nn}`;
+  const user = process.env.CLIENT_ADMIN_USER || process.env.MIKROTIK_USER;
+  const pass = process.env.CLIENT_ADMIN_PASS || process.env.MIKROTIK_PASS;
+  const psexec = process.env.PSEXEC_PATH || "psexec.exe";
+  const scriptPath = path.join(__dirname, "ShareEpicFolders.ps1");
+
+  // Ship the script content over stdin to avoid pre-copying — PsExec supports -c to copy exe, but for ps1 we base64-embed the file into a one-liner.
+  let script;
+  try { script = readFileSync(scriptPath, "utf8"); } catch (e) { return { ok: false, error: `cannot read ShareEpicFolders.ps1: ${e.message}` }; }
+  const b64 = Buffer.from(script, "utf16le").toString("base64");
+
+  const args = [
+    "-accepteula", "-nobanner",
+    `\\\\${host}`,
+    ...(user ? ["-u", user] : []),
+    ...(pass ? ["-p", pass] : []),
+    "-h",
+    "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass",
+    "-EncodedCommand", b64,
+  ];
+
+  return await new Promise((resolve) => {
+    execFile(psexec, args, { timeout: 60_000, windowsHide: true }, (err, _stdout, stderr) => {
+      if (err && err.code === "ENOENT") return resolve({ ok: false, error: `psexec not found (set PSEXEC_PATH)` });
+      if (err) return resolve({ ok: false, error: (stderr || err.message || "").toString().slice(0, 220) });
+      resolve({ ok: true, note: `shares configured on ${host}` });
+    });
+  });
 }
 
 server.listen(PORT, "127.0.0.1", () => {
