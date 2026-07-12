@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { Wifi, Infinity as InfIcon } from "lucide-react";
+import { Wifi, Infinity as InfIcon, Router, MonitorCog } from "lucide-react";
 import {
   DEFAULT_COLORS,
+  loadQosBackend,
   loadQosColors,
   loadQosStates,
   pushQos,
+  saveQosBackend,
   saveQosColors,
   saveQosStates,
+  type QosBackend,
   type QosColors,
   type QosState,
   type Tier,
