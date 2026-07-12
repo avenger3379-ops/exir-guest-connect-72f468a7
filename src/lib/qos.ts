@@ -15,6 +15,22 @@ export interface QosColors {
 
 const STATE_KEY = "exir.qos.state.v1";
 const COLOR_KEY = "exir.qos.colors.v1";
+const BACKEND_KEY = "exir.qos.backend.v1";
+
+export type QosBackend = "mikrotik" | "netlimiter";
+
+export function loadQosBackend(): QosBackend {
+  try {
+    const v = localStorage.getItem(BACKEND_KEY);
+    if (v === "netlimiter" || v === "mikrotik") return v;
+  } catch { /* ignore */ }
+  return "mikrotik";
+}
+
+export function saveQosBackend(b: QosBackend) {
+  localStorage.setItem(BACKEND_KEY, b);
+  window.dispatchEvent(new Event("exir:qos-backend"));
+}
 
 export const DEFAULT_COLORS: QosColors = {
   "500K": "#22c55e",
