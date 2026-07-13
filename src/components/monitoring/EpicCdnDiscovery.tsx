@@ -71,7 +71,7 @@ export function EpicCdnDiscovery() {
       launcher: string;
       host: string;
       ip: string;
-      status: "HIT" | "MISS" | "MIXED";
+      status: "HIT" | "MISS" | "MIXED" | "DNS";
       hits: number;
       misses: number;
       bytes: number;
@@ -94,7 +94,7 @@ export function EpicCdnDiscovery() {
     return Array.from(map.values())
       .map((r) => {
         const total = r.hits + r.misses;
-        r.status = total === 0 ? "MIXED" : r.hits === total ? "HIT" : r.misses === total ? "MISS" : "MIXED";
+        r.status = total === 0 ? "DNS" : r.hits === total ? "HIT" : r.misses === total ? "MISS" : "MIXED";
         return {
           ...r,
           speedKBs: Math.round((r.bytes / 1024) / (LIVE_WINDOW_MS / 1000)),
@@ -112,19 +112,20 @@ export function EpicCdnDiscovery() {
 
   // Phase 4 — Recommendations
   const recommendations = useMemo(
-    () => hostArr.filter((h) => !h.cached && h.timesSeen > RECOMMEND_THRESHOLD).sort((a, b) => b.timesSeen - a.timesSeen),
+    () => hostArr.filter((h) => !h.cached && h.status !== "DNS Only" && h.timesSeen > RECOMMEND_THRESHOLD).sort((a, b) => b.timesSeen - a.timesSeen),
     [hostArr],
   );
 
   // Phase 8 — Stats
   const stats = useMemo(() => {
-    const byL: Record<string, { known: number; cached: number; unknown: number }> = {};
+    const byL: Record<string, { known: number; cached: number; unknown: number; needReview: number }> = {};
     for (const h of hostArr) {
       const l = h.launcher || "Unknown";
-      if (!byL[l]) byL[l] = { known: 0, cached: 0, unknown: 0 };
+      if (!byL[l]) byL[l] = { known: 0, cached: 0, unknown: 0, needReview: 0 };
       byL[l].known++;
       if (h.cached) byL[l].cached++;
       else byL[l].unknown++;
+      if (!h.cached && h.status !== "DNS Only") byL[l].needReview++;
     }
     return byL;
   }, [hostArr]);
@@ -220,15 +221,15 @@ export function EpicCdnDiscovery() {
           <div className="max-h-64 overflow-y-auto">
             {live.length === 0 && <Empty text="no downloads in the last 30s" />}
             {live.map((r) => {
-              const color = r.status === "HIT" ? "var(--neon-green)" : r.status === "MISS" ? "var(--neon-red)" : "var(--neon-amber)";
-              const dot = r.status === "HIT" ? "🟢" : r.status === "MISS" ? "🔴" : "🟡";
+              const color = r.status === "HIT" ? "var(--neon-green)" : r.status === "MISS" ? "var(--neon-red)" : r.status === "DNS" ? "var(--neon-cyan)" : "var(--neon-amber)";
+              const dot = r.status === "HIT" ? "🟢" : r.status === "MISS" ? "🔴" : r.status === "DNS" ? "🔵" : "🟡";
               return (
                 <Row key={`${r.vip}-${r.host}`}>
                   <Cell><b className="text-glow-cyan">{r.vip}</b></Cell>
                   <Cell>{r.launcher}</Cell>
                   <Cell className="truncate max-w-[260px]" title={r.host}>{r.host}</Cell>
                   <Cell className="text-muted-foreground">{r.ip}</Cell>
-                  <Cell style={{ color }}>{dot} {r.status === "HIT" ? "Cached" : r.status === "MISS" ? "Internet" : "Mixed"}</Cell>
+                  <Cell style={{ color }}>{dot} {r.status === "HIT" ? "Cached" : r.status === "MISS" ? "Internet" : r.status === "DNS" ? "DNS Only" : "Mixed"}</Cell>
                   <Cell style={{ color: "var(--neon-magenta)" }}>{r.speedKBs} KB/s</Cell>
                   <Cell className="text-muted-foreground">{timeAgo(r.lastAt)}</Cell>
                 </Row>
@@ -250,8 +251,8 @@ export function EpicCdnDiscovery() {
                 <Cell className="text-muted-foreground">{new Date(h.firstSeen).toLocaleString()}</Cell>
                 <Cell>{h.vips.join(", ") || "—"}</Cell>
                 <Cell>{h.games.join(", ") || guessGame(h.hostname) || "—"}</Cell>
-                <Cell style={{ color: h.cached ? "var(--neon-green)" : "var(--neon-red)" }}>
-                  {h.cached ? "Cached" : "Unknown"}
+                <Cell style={{ color: statusColor(h.status || (h.cached ? "Cached" : "Unknown")) }}>
+                  {h.status || (h.cached ? "Cached" : "Unknown")}
                 </Cell>
               </Row>
             ))}
@@ -279,17 +280,18 @@ export function EpicCdnDiscovery() {
               >clear</button>
             </div>
           </div>
-          <TableHead cols={["Host", "Launcher", "Cached", "Seen", "Hits", "Miss", "Last Seen"]} />
+          <TableHead cols={["Host", "Launcher", "Status", "Seen", "Hits", "Miss", "DNS", "Last Seen"]} />
           <div className="max-h-72 overflow-y-auto">
             {filteredDb.length === 0 && <Empty text="no hosts recorded yet" />}
             {filteredDb.map((h) => (
               <Row key={h.hostname}>
                 <Cell className="truncate max-w-[280px]" title={h.hostname}>{h.hostname}</Cell>
                 <Cell>{h.launcher}</Cell>
-                <Cell style={{ color: h.cached ? "var(--neon-green)" : "var(--neon-red)" }}>{h.cached ? "✅" : "❌"}</Cell>
+                <Cell style={{ color: statusColor(h.status || (h.cached ? "Cached" : "Unknown")) }}>{h.status || (h.cached ? "Cached" : "Unknown")}</Cell>
                 <Cell>{h.timesSeen}</Cell>
                 <Cell style={{ color: "var(--neon-green)" }}>{h.hits}</Cell>
                 <Cell style={{ color: "var(--neon-red)" }}>{h.misses}</Cell>
+                <Cell style={{ color: "var(--neon-cyan)" }}>{h.dnsOnly || 0}</Cell>
                 <Cell className="text-muted-foreground">{timeAgo(h.lastSeen)}</Cell>
               </Row>
             ))}
@@ -315,7 +317,8 @@ export function EpicCdnDiscovery() {
               <div className="grid grid-cols-3 gap-1 font-mono text-[10px]">
                 <Mini icon={<Database size={10} />} label="Known"  value={String(s.known)}   color="var(--neon-cyan)" />
                 <Mini icon={<Zap size={10} />}      label="Cached" value={String(s.cached)}  color="var(--neon-green)" />
-                <Mini icon={<Cloud size={10} />}    label="Review" value={String(s.unknown)} color="var(--neon-red)" />
+                <Mini icon={<Cloud size={10} />}    label="Unknown" value={String(s.unknown)} color="var(--neon-red)" />
+                <Mini icon={<AlertTriangle size={10} />} label="Review" value={String(s.needReview)} color="var(--neon-amber)" />
               </div>
             </div>
           ))}
