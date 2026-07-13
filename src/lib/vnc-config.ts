@@ -1,8 +1,6 @@
 // VNC connection configuration — per-machine IP/port + path to viewer exe.
 // Persisted in localStorage so the user configures once.
 
-import { loadQosBackend, loadQosStates, pushQos } from "./qos";
-
 export interface VncMachine {
   machine: string; // e.g. "VIP01"
   host: string; // ip or hostname
@@ -130,28 +128,12 @@ export async function launchVnc(cfg: VncConfig, machine: string): Promise<
       signal: ctrl.signal,
     }).finally(() => clearTimeout(timer));
     const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-    if (res.ok && json.ok) {
-      reapplyNetLimiterAfterVnc(machine);
-      return { ok: true, via: "agent" };
-    }
+    if (res.ok && json.ok) return { ok: true, via: "agent" };
     if (json?.error) return { ok: false, error: json.error };
   } catch {
     /* agent unreachable — fall back below */
   }
   // Fallback: download the .bat as before.
   downloadVncBat(cfg, machine);
-  reapplyNetLimiterAfterVnc(machine);
   return { ok: true, via: "bat" };
-}
-
-function reapplyNetLimiterAfterVnc(machine: string) {
-  try {
-    if (loadQosBackend() !== "netlimiter") return;
-    const state = loadQosStates()[machine];
-    if (!state?.enabled || state.tier === "off") return;
-    window.setTimeout(() => void pushQos(machine, state), 2500);
-    window.setTimeout(() => void pushQos(machine, state), 8000);
-  } catch {
-    /* ignore */
-  }
 }

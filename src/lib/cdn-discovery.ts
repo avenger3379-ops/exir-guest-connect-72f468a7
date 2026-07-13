@@ -4,21 +4,16 @@
 export interface HostRow {
   hostname: string;
   launcher: string;      // steam / epic / origin / blizzard / riot / ...
-  status: HostStatus;
   firstSeen: number;
   lastSeen: number;
   timesSeen: number;
   hits: number;
   misses: number;
-  dnsOnly: number;
-  sources: { access: boolean; dns: boolean };
   vips: string[];        // client machines observed
   games: string[];       // heuristic game names from URLs
   cached: boolean;       // hits > 0
   resolvedIp?: string;
 }
-
-export type HostStatus = "Cached" | "Miss" | "DNS Only" | "New" | "Unknown";
 
 const KEY = "exir.cdn.hosts.v1";
 export const CDN_EVT = "exir:cdn-hosts";
@@ -73,9 +68,8 @@ export function ingest(
     service: string;
     ip: string;
     url: string;
-    status: "HIT" | "MISS" | "DNS" | "-";
+    status: "HIT" | "MISS" | "-";
     t: number;
-    source?: "access" | "dns";
   },
   vipFromIp: (ip: string) => string | null,
 ): Record<string, HostRow> {
@@ -84,33 +78,20 @@ export function ingest(
   const row = map[host] || {
     hostname: host,
     launcher: classifyLauncher(line.service, host),
-    status: line.status === "DNS" ? "DNS Only" : "New",
     firstSeen: line.t,
     lastSeen: line.t,
     timesSeen: 0,
     hits: 0,
     misses: 0,
-    dnsOnly: 0,
-    sources: { access: false, dns: false },
     vips: [],
     games: [],
     cached: false,
   };
   row.lastSeen = Math.max(row.lastSeen, line.t);
   row.timesSeen += 1;
-  row.sources ||= { access: false, dns: false };
-  row.dnsOnly ||= 0;
-  if (line.source === "dns" || line.status === "DNS") row.sources.dns = true;
-  else row.sources.access = true;
   if (line.status === "HIT") row.hits += 1;
   else if (line.status === "MISS") row.misses += 1;
-  else if (line.status === "DNS") row.dnsOnly += 1;
   row.cached = row.hits > 0;
-  row.status = row.cached ? "Cached"
-    : row.misses > 0 ? "Miss"
-    : row.dnsOnly > 0 ? "DNS Only"
-    : row.timesSeen <= 2 ? "New"
-    : "Unknown";
   // upgrade launcher if newly identifiable
   if (row.launcher === "Unknown") row.launcher = classifyLauncher(line.service, host);
   const vip = vipFromIp(line.ip);

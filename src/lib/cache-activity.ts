@@ -10,8 +10,6 @@ export interface CacheSshConfig {
   user: string;
   pass: string;
   logPath: string;
-  queryLogPath: string;
-  queryEnabled: boolean;
   enabled: boolean;
 }
 
@@ -21,8 +19,6 @@ export const DEFAULT_CACHE_SSH: CacheSshConfig = {
   user: "lancache",
   pass: "",
   logPath: "/cache/logs/access.log",
-  queryLogPath: "/cache/logs/queries.log",
-  queryEnabled: true,
   enabled: false,
 };
 
@@ -44,12 +40,11 @@ export function saveCacheSsh(c: CacheSshConfig) {
 export interface CacheLine {
   t: number;         // epoch ms (best-effort parsed)
   ip: string;        // client IP
-  status: "HIT" | "MISS" | "DNS" | "-";
+  status: "HIT" | "MISS" | "-";
   service: string;   // steam / epic / riot / blizzard / origin / ...
   bytes: number;
   url: string;
   host: string;      // CDN hostname (e.g. cloudflare.epicgamescdn.com)
-  source: "access" | "dns";
   raw: string;
 }
 
@@ -86,21 +81,7 @@ export function parseCacheLine(raw: string): CacheLine | null {
     const uM = url.match(/^https?:\/\/([^/]+)/i);
     if (uM) host = uM[1].toLowerCase();
   }
-  return { t, ip, service, status, bytes, url, host, source: "access", raw };
-}
-
-// dnsmasq / LanCache DNS query lines. DNS-only does not prove HIT/MISS; it
-// lets Discovery track hosts that were resolved but never reached access.log.
-export function parseDnsLine(raw: string): CacheLine | null {
-  if (!raw || !raw.trim()) return null;
-  const q = raw.match(/query\[[^\]]+\]\s+([a-z0-9.-]+\.[a-z]{2,})\s+from\s+(\d+\.\d+\.\d+\.\d+)/i)
-    || raw.match(/(\d+\.\d+\.\d+\.\d+).*?query\[[^\]]+\]\s+([a-z0-9.-]+\.[a-z]{2,})/i);
-  if (!q) return null;
-  const firstIsIp = /^\d+\.\d+\.\d+\.\d+$/.test(q[1]);
-  const ip = firstIsIp ? q[1] : q[2];
-  const host = (firstIsIp ? q[2] : q[1]).toLowerCase();
-  if (/\.(arpa|local|lan)$/i.test(host)) return null;
-  return { t: Date.now(), ip, status: "DNS", service: "dns", bytes: 0, url: host, host, source: "dns", raw };
+  return { t, ip, service, status, bytes, url, host, raw };
 }
 
 export type CacheMode = "hit" | "miss" | "mixed" | "idle";
@@ -154,12 +135,12 @@ export function ipFromMachine(machine: string): string | null {
   return `192.168.3.${100 + Number(m[1])}`;
 }
 
-export async function fetchCacheTail(cfg: CacheSshConfig, lines = 400, path = cfg.logPath): Promise<{ ok: boolean; lines: string[]; error?: string }> {
+export async function fetchCacheTail(cfg: CacheSshConfig, lines = 400): Promise<{ ok: boolean; lines: string[]; error?: string }> {
   try {
     const r = await fetch("http://localhost:8765/cache/tail", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ host: cfg.host, port: cfg.port, user: cfg.user, pass: cfg.pass, path, lines }),
+      body: JSON.stringify({ host: cfg.host, port: cfg.port, user: cfg.user, pass: cfg.pass, path: cfg.logPath, lines }),
     });
     // Safely handle empty / non-JSON bodies (agent crash, proxy, CORS 204…)
     // so callers never see "Unexpected end of JSON input".
