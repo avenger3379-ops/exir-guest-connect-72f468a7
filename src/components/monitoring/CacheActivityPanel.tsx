@@ -5,6 +5,7 @@ import {
   fetchCacheTail,
   loadCacheSsh,
   parseCacheLine,
+  parseDnsLine,
   type CacheLine,
   type CacheSshConfig,
   type ClientCache,
@@ -38,7 +39,12 @@ export function CacheActivityPanel() {
     let alive = true;
     const seen = new Set<string>();
     async function tick() {
-      const r = await fetchCacheTail(cfg, 300);
+      const [r, dns] = await Promise.all([
+        fetchCacheTail(cfg, 300),
+        cfg.queryEnabled && cfg.queryLogPath
+          ? fetchCacheTail(cfg, 200, cfg.queryLogPath)
+          : Promise.resolve({ ok: true, lines: [] as string[] }),
+      ]);
       if (!alive) return;
       if (!r.ok) { setError(r.error || "ssh error"); return; }
       setError(null);
@@ -48,6 +54,15 @@ export function CacheActivityPanel() {
         seen.add(raw);
         const p = parseCacheLine(raw);
         if (p) parsed.push(p);
+      }
+      if (dns.ok) {
+        for (const raw of dns.lines) {
+          const key = `dns:${raw}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const p = parseDnsLine(raw);
+          if (p) parsed.push(p);
+        }
       }
       if (parsed.length === 0) return;
       setLines((prev) => {
@@ -114,15 +129,15 @@ export function CacheActivityPanel() {
 
       <div className="mt-3 rounded-md border border-border/60 bg-black/40 p-1.5">
         <div className="mb-1 flex items-center justify-between px-1">
-          <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">▸ live access.log</span>
+          <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">▸ live access.log + queries.log</span>
           <span className="font-mono text-[9px] text-muted-foreground">{lines.length} lines · {POLL_MS / 1000}s poll</span>
         </div>
         <div ref={scrollRef} className="flex gap-1.5 overflow-x-auto whitespace-nowrap py-1 font-mono text-[10px]" style={{ scrollbarWidth: "thin" }}>
           {lines.slice(-120).map((l, i) => {
-            const c = l.status === "HIT" ? "var(--neon-green)" : l.status === "MISS" ? "var(--neon-red)" : "oklch(0.6 0.02 250)";
+            const c = l.status === "HIT" ? "var(--neon-green)" : l.status === "MISS" ? "var(--neon-red)" : l.status === "DNS" ? "var(--neon-cyan)" : "oklch(0.6 0.02 250)";
             return (
               <span key={i} className="shrink-0 rounded border px-1.5 py-0.5" style={{ borderColor: `${c}55`, color: c }} title={l.raw}>
-                <b>{l.status}</b> · {l.service} · {l.ip.split(".").pop()} · {(l.bytes / 1024).toFixed(0)}KB
+                <b>{l.status}</b> · {l.service} · {l.ip.split(".").pop()} · {l.source === "dns" ? l.host.slice(0, 18) : `${(l.bytes / 1024).toFixed(0)}KB`}
               </span>
             );
           })}
