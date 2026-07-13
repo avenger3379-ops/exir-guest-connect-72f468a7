@@ -420,11 +420,12 @@ function runShutdown(args, user, pass, host, machine) {
 
     // Fallback #1: PsExec (Sysinternals) — most reliable for admin ops with creds.
     const tryPsExec = (prevMsg) => {
+      const psexec = process.env.PSEXEC_PATH || "psexec.exe";
       const psArgs =
         flag === "/l"
           ? [`\\\\${host}`, "-u", user, "-p", pass, "-h", "-accepteula", "shutdown", "/l", "/f"]
           : [`\\\\${host}`, "-u", user, "-p", pass, "-h", "-accepteula", "shutdown", flag, "/t", "0", "/f"];
-      execFile("psexec", psArgs, { timeout: 15000 }, (err, _out, stderr) => {
+      execFile(psexec, psArgs, { timeout: 15000 }, (err, _out, stderr) => {
         if (!err) return resolve({ ok: true, note: `psexec → ${machine}` });
         // PsExec not installed → try WMIC as last resort.
         if (err.code === "ENOENT") return tryWmic(prevMsg);
@@ -781,31 +782,14 @@ async function handleGsShare(body) {
     : `${process.env.MIKROTIK_SUBNET || "192.168.3.1"}${nn}`;
   const user = process.env.CLIENT_ADMIN_USER || process.env.MIKROTIK_USER;
   const pass = process.env.CLIENT_ADMIN_PASS || process.env.MIKROTIK_PASS;
-  const psexec = process.env.PSEXEC_PATH || "psexec.exe";
   const scriptPath = path.join(__dirname, "ShareEpicFolders.ps1");
 
-  // Ship the script content over stdin to avoid pre-copying — PsExec supports -c to copy exe, but for ps1 we base64-embed the file into a one-liner.
   let script;
   try { script = readFileSync(scriptPath, "utf8"); } catch (e) { return { ok: false, error: `cannot read ShareEpicFolders.ps1: ${e.message}` }; }
-  const b64 = Buffer.from(script, "utf16le").toString("base64");
-
-  const args = [
-    "-accepteula", "-nobanner",
-    `\\\\${host}`,
-    ...(user ? ["-u", user] : []),
-    ...(pass ? ["-p", pass] : []),
-    "-h",
-    "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass",
-    "-EncodedCommand", b64,
-  ];
-
-  return await new Promise((resolve) => {
-    execFile(psexec, args, { timeout: 60_000, windowsHide: true }, (err, _stdout, stderr) => {
-      if (err && err.code === "ENOENT") return resolve({ ok: false, error: `psexec not found (set PSEXEC_PATH)` });
-      if (err) return resolve({ ok: false, error: (stderr || err.message || "").toString().slice(0, 220) });
-      resolve({ ok: true, note: `shares configured on ${host}` });
-    });
-  });
+  const r = await runRemotePowerShell({ host, user, pass, script, timeout: 60_000 });
+  return r.ok
+    ? { ok: true, note: `shares configured on ${host} via ${r.method}` }
+    : { ok: false, error: r.error || "remote share failed" };
 }
 
 server.listen(PORT, "127.0.0.1", () => {
