@@ -1,12 +1,11 @@
-import { useEffect, useState, type MouseEvent } from "react";
-import { AlertTriangle, Cpu, MemoryStick, Thermometer } from "lucide-react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { Cpu, MemoryStick, Thermometer, TriangleAlert, Loader2, Check, X } from "lucide-react";
 import type { ClientStatus } from "@/lib/monitoring-types";
 import { CircularGauge } from "./CircularGauge";
 import { loadSettings, type GaugeSettings } from "@/lib/gauge-settings";
 import { ipFromMachine, type ClientCache } from "@/lib/cache-activity";
 import { CACHE_EVT } from "./CacheActivityPanel";
-import { sendPunishmentWarning } from "@/lib/client-actions";
-
+import { sendPunish } from "@/lib/punish";
 
 interface Props {
   client: ClientStatus;
@@ -15,7 +14,8 @@ interface Props {
 
 function gpuBrand(name: string): "nvidia" | "amd" | "intel" | "other" {
   const n = name.toLowerCase();
-  if (n.includes("nvidia") || n.includes("geforce") || n.includes("rtx") || n.includes("gtx")) return "nvidia";
+  if (n.includes("nvidia") || n.includes("geforce") || n.includes("rtx") || n.includes("gtx"))
+    return "nvidia";
   if (n.includes("amd") || n.includes("radeon")) return "amd";
   if (n.includes("intel") || n.includes("arc")) return "intel";
   return "other";
@@ -70,6 +70,89 @@ function BrandBadge({ brand }: { brand: "nvidia" | "amd" | "intel" | "other" }) 
   );
 }
 
+type PunishState = "idle" | "confirm" | "sending" | "ok" | "error";
+
+/** Small warning-triangle button next to the game/process pill. First click
+ * arms a 3s confirm window (no accidental punishments from a stray click),
+ * second click actually fires the full-screen timeout overlay at the client. */
+function PunishButton({ machine }: { machine: string }) {
+  const [state, setState] = useState<PunishState>("idle");
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+    },
+    [],
+  );
+
+  function armOrFire(e: ReactMouseEvent) {
+    e.stopPropagation();
+    if (state === "sending" || state === "ok") return;
+
+    if (state !== "confirm") {
+      setState("confirm");
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+      resetTimer.current = setTimeout(() => setState("idle"), 3000);
+      return;
+    }
+
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+    setState("sending");
+    setErrMsg(null);
+    void sendPunish(machine).then((res) => {
+      if (res.ok) {
+        setState("ok");
+        resetTimer.current = setTimeout(() => setState("idle"), 2000);
+      } else {
+        setErrMsg(res.error || "خطا در ارسال");
+        setState("error");
+        resetTimer.current = setTimeout(() => setState("idle"), 2500);
+      }
+    });
+  }
+
+  const label =
+    state === "confirm"
+      ? "مطمئنی؟ دوباره بزن"
+      : state === "sending"
+        ? "در حال ارسال…"
+        : state === "ok"
+          ? "ارسال شد"
+          : state === "error"
+            ? errMsg || "خطا"
+            : "تنبیه — نمایش صفحه هشدار روی این کلاینت";
+
+  return (
+    <button
+      type="button"
+      onClick={armOrFire}
+      title={label}
+      className={`relative inline-flex size-6 shrink-0 items-center justify-center rounded-full border transition-all ${
+        state === "confirm"
+          ? "animate-pulse border-[var(--neon-red)] bg-[var(--neon-red)]/25"
+          : state === "error"
+            ? "border-[var(--neon-red)] bg-[var(--neon-red)]/15"
+            : state === "ok"
+              ? "border-[var(--neon-green)] bg-[var(--neon-green)]/15"
+              : "border-[var(--neon-red)]/40 bg-[var(--neon-red)]/10 hover:border-[var(--neon-red)] hover:bg-[var(--neon-red)]/20"
+      }`}
+      style={{ boxShadow: state === "idle" ? undefined : "0 0 8px var(--neon-red)66" }}
+    >
+      {state === "sending" ? (
+        <Loader2 className="size-3.5 animate-spin" style={{ color: "var(--neon-red)" }} />
+      ) : state === "ok" ? (
+        <Check className="size-3.5" style={{ color: "var(--neon-green)" }} />
+      ) : state === "error" ? (
+        <X className="size-3.5" style={{ color: "var(--neon-red)" }} />
+      ) : (
+        <TriangleAlert className="size-3.5" style={{ color: "var(--neon-red)" }} />
+      )}
+    </button>
+  );
+}
+
 export function ClientCard({ client, onClick }: Props) {
   const online = client.online !== false;
   const overheat = client.gpuTemp >= 80 || client.cpuTemp >= 78;
@@ -77,7 +160,6 @@ export function ClientCard({ client, onClick }: Props) {
   const brandColor = BRAND_COLOR[brand];
 
   const [settings, setSettings] = useState<GaugeSettings>(() => loadSettings());
-  const [punishing, setPunishing] = useState(false);
   useEffect(() => {
     const h = () => setSettings(loadSettings());
     window.addEventListener("exir:gauge-settings", h);
@@ -101,15 +183,22 @@ export function ClientCard({ client, onClick }: Props) {
     window.addEventListener(CACHE_EVT, read);
     return () => window.removeEventListener(CACHE_EVT, read);
   }, [client.machine]);
-  const cacheColor = cache?.mode === "hit" ? "var(--neon-green)"
-    : cache?.mode === "miss" ? "var(--neon-red)"
-    : cache?.mode === "mixed" ? "var(--neon-amber)"
-    : "oklch(0.5 0.02 250)";
-  const cacheLabel = cache?.mode === "hit" ? "CACHE"
-    : cache?.mode === "miss" ? "NET"
-    : cache?.mode === "mixed" ? "MIX"
-    : "IDLE";
-
+  const cacheColor =
+    cache?.mode === "hit"
+      ? "var(--neon-green)"
+      : cache?.mode === "miss"
+        ? "var(--neon-red)"
+        : cache?.mode === "mixed"
+          ? "var(--neon-amber)"
+          : "oklch(0.5 0.02 250)";
+  const cacheLabel =
+    cache?.mode === "hit"
+      ? "CACHE"
+      : cache?.mode === "miss"
+        ? "NET"
+        : cache?.mode === "mixed"
+          ? "MIX"
+          : "IDLE";
 
   // short gpu model: "NVIDIA GeForce RTX 3070" -> "RTX 3070"
   const shortGpu =
@@ -118,24 +207,18 @@ export function ClientCard({ client, onClick }: Props) {
       .replace(/\s+/g, " ")
       .trim() || client.gpuName;
 
-  async function punish(e: MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (punishing || !online) return;
-    setPunishing(true);
-    await sendPunishmentWarning(client.machine);
-    setPunishing(false);
-  }
-
   return (
     <div
       role="button"
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onClick();
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
       }}
-      className={`group relative overflow-hidden rounded-xl p-3 text-left transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] glass-panel ${
+      className={`group relative w-full cursor-pointer overflow-hidden rounded-xl p-3 text-left transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] glass-panel ${
         !online ? "opacity-50" : overheat ? "neon-border-red" : "neon-border-cyan"
       }`}
     >
@@ -143,11 +226,7 @@ export function ClientCard({ client, onClick }: Props) {
       <div
         className="pointer-events-none absolute -right-8 -top-8 size-20 rounded-full opacity-30 blur-2xl transition-opacity group-hover:opacity-60"
         style={{
-          background: !online
-            ? "transparent"
-            : overheat
-              ? "var(--neon-red)"
-              : "var(--neon-cyan)",
+          background: !online ? "transparent" : overheat ? "var(--neon-red)" : "var(--neon-cyan)",
         }}
       />
 
@@ -156,7 +235,9 @@ export function ClientCard({ client, onClick }: Props) {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px overflow-hidden">
           <div
             className="h-full w-1/3 sweep"
-            style={{ background: "linear-gradient(90deg, transparent, var(--neon-cyan), transparent)" }}
+            style={{
+              background: "linear-gradient(90deg, transparent, var(--neon-cyan), transparent)",
+            }}
           />
         </div>
       )}
@@ -167,15 +248,27 @@ export function ClientCard({ client, onClick }: Props) {
           <span
             className={`inline-block size-2 shrink-0 rounded-full ${online ? "pulse-dot" : ""}`}
             style={{
-              background: online ? (overheat ? "var(--neon-red)" : "var(--neon-green)") : "oklch(0.4 0 0)",
-              boxShadow: online ? `0 0 8px ${overheat ? "var(--neon-red)" : "var(--neon-green)"}` : "none",
+              background: online
+                ? overheat
+                  ? "var(--neon-red)"
+                  : "var(--neon-green)"
+                : "oklch(0.4 0 0)",
+              boxShadow: online
+                ? `0 0 8px ${overheat ? "var(--neon-red)" : "var(--neon-green)"}`
+                : "none",
             }}
           />
-          <span className="font-mono text-lg font-black tracking-wider text-glow-cyan">{client.machine}</span>
+          <span className="font-mono text-lg font-black tracking-wider text-glow-cyan">
+            {client.machine}
+          </span>
         </div>
         {online && (
           <div className="flex min-w-0 items-center gap-1.5">
-            <span className="truncate font-mono text-[10px] font-bold uppercase" style={{ color: brandColor, textShadow: `0 0 5px ${brandColor}55` }} title={client.gpuName}>
+            <span
+              className="truncate font-mono text-[10px] font-bold uppercase"
+              style={{ color: brandColor, textShadow: `0 0 5px ${brandColor}55` }}
+              title={client.gpuName}
+            >
               {shortGpu}
             </span>
             <BrandBadge brand={brand} />
@@ -183,12 +276,17 @@ export function ClientCard({ client, onClick }: Props) {
         )}
       </div>
 
-
       {online ? (
         <>
           {/* Gauges row: GPU / AVG / CPU */}
           <div className="relative mt-3 flex items-center justify-around">
-            <CircularGauge label="GPU" icon={MemoryStick} value={client.gpuTemp} size={54} bands={settings.gpu} />
+            <CircularGauge
+              label="GPU"
+              icon={MemoryStick}
+              value={client.gpuTemp}
+              size={54}
+              bands={settings.gpu}
+            />
             <CircularGauge
               label="AVG"
               icon={Thermometer}
@@ -205,7 +303,6 @@ export function ClientCard({ client, onClick }: Props) {
             />
           </div>
 
-
           {/* Bottom stats */}
           <div className="relative mt-2 grid grid-cols-3 gap-1 rounded-md bg-secondary/40 p-2">
             <Stat label="GPU%" value={client.gpuUsage.toFixed(0)} />
@@ -214,10 +311,15 @@ export function ClientCard({ client, onClick }: Props) {
           </div>
 
           {/* Cache status pill */}
-          <div className="relative mt-2 flex items-center justify-between rounded-md border px-2 py-1 font-mono text-[9px] uppercase tracking-widest"
-               style={{ borderColor: `${cacheColor}55`, background: `${cacheColor}0d` }}>
+          <div
+            className="relative mt-2 flex items-center justify-between rounded-md border px-2 py-1 font-mono text-[9px] uppercase tracking-widest"
+            style={{ borderColor: `${cacheColor}55`, background: `${cacheColor}0d` }}
+          >
             <span className="flex items-center gap-1" style={{ color: cacheColor }}>
-              <span className="size-1.5 rounded-full" style={{ background: cacheColor, boxShadow: `0 0 5px ${cacheColor}` }} />
+              <span
+                className="size-1.5 rounded-full"
+                style={{ background: cacheColor, boxShadow: `0 0 5px ${cacheColor}` }}
+              />
               {cacheLabel}
             </span>
             <span className="text-muted-foreground">
@@ -225,21 +327,13 @@ export function ClientCard({ client, onClick }: Props) {
             </span>
           </div>
 
-          {/* Process pill */}
-          <div className="relative mt-2 flex items-center justify-center">
+          {/* Process pill + punish trigger (warning icon sits to its left) */}
+          <div className="relative mt-2 flex items-center justify-center gap-1.5">
+            <PunishButton machine={client.machine} />
             <span className="rounded-full border border-border/60 bg-surface/70 px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-wider">
               <span className="text-muted-foreground">▶ </span>
               <span className="text-foreground">{client.topProcess}</span>
             </span>
-            <button
-              onClick={punish}
-              disabled={punishing}
-              title="Send 15-second warning overlay to this client"
-              className="absolute right-0 flex size-7 items-center justify-center rounded-md border transition hover:brightness-125 disabled:opacity-50"
-              style={{ borderColor: "var(--neon-red)55", color: "var(--neon-red)", background: "var(--neon-red)0d" }}
-            >
-              <AlertTriangle size={14} className={punishing ? "pulse-dot" : ""} />
-            </button>
           </div>
         </>
       ) : (
@@ -260,7 +354,9 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
   const glow = accent === "magenta" ? "text-glow-magenta" : "";
   return (
     <div className="text-center">
-      <div className="font-mono text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="font-mono text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
       <div className={`font-mono text-base font-black leading-tight ${glow}`} style={{ color }}>
         {value}
       </div>
