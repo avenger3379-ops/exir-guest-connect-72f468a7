@@ -4,6 +4,7 @@ import type { ClientStatus } from "@/lib/monitoring-types";
 import { MetricBar } from "./MetricBar";
 import { PowerControls } from "./PowerControls";
 import { GoodSyncPanel } from "./GoodSyncPanel";
+import { SendMessagePanel } from "./SendMessagePanel";
 import { getMachine, launchVnc, loadVncConfig } from "@/lib/vnc-config";
 import { loadSettings, type GaugeSettings } from "@/lib/gauge-settings";
 import { ipFromMachine, type ClientCache } from "@/lib/cache-activity";
@@ -16,6 +17,7 @@ interface Props {
 
 export function ClientDetailModal({ client, onClose }: Props) {
   const [settings, setSettings] = useState<GaugeSettings>(() => loadSettings());
+  const [messageOpen, setMessageOpen] = useState(false);
   useEffect(() => {
     const h = () => setSettings(loadSettings());
     window.addEventListener("exir:gauge-settings", h);
@@ -122,12 +124,13 @@ export function ClientDetailModal({ client, onClose }: Props) {
                 Connect VNC
               </button>
               <button
-                onClick={() => alert(`Send message to ${client.machine} — coming soon`)}
+                onClick={() => setMessageOpen((v) => !v)}
                 className="flex-1 rounded-md py-2.5 font-mono text-xs font-bold uppercase tracking-widest neon-border-magenta hover:brightness-125"
               >
-                Send Message
+                {messageOpen ? "Hide Message" : "Send Message"}
               </button>
             </div>
+            {messageOpen && <SendMessagePanel machine={client.machine} />}
             <LanCacheBox cache={cache} ip={ipFromMachine(client.machine)} />
             <GoodSyncPanel machine={client.machine} />
             <PowerControls machine={client.machine} />

@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
-import { Cpu, MemoryStick, Thermometer } from "lucide-react";
+import { useEffect, useState, type MouseEvent } from "react";
+import { AlertTriangle, Cpu, MemoryStick, Thermometer } from "lucide-react";
 import type { ClientStatus } from "@/lib/monitoring-types";
 import { CircularGauge } from "./CircularGauge";
 import { loadSettings, type GaugeSettings } from "@/lib/gauge-settings";
 import { ipFromMachine, type ClientCache } from "@/lib/cache-activity";
 import { CACHE_EVT } from "./CacheActivityPanel";
+import { sendPunishmentWarning } from "@/lib/client-actions";
 
 
 interface Props {
@@ -76,6 +77,7 @@ export function ClientCard({ client, onClick }: Props) {
   const brandColor = BRAND_COLOR[brand];
 
   const [settings, setSettings] = useState<GaugeSettings>(() => loadSettings());
+  const [punishing, setPunishing] = useState(false);
   useEffect(() => {
     const h = () => setSettings(loadSettings());
     window.addEventListener("exir:gauge-settings", h);
@@ -116,9 +118,23 @@ export function ClientCard({ client, onClick }: Props) {
       .replace(/\s+/g, " ")
       .trim() || client.gpuName;
 
+  async function punish(e: MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (punishing || !online) return;
+    setPunishing(true);
+    await sendPunishmentWarning(client.machine);
+    setPunishing(false);
+  }
+
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onClick();
+      }}
       className={`group relative overflow-hidden rounded-xl p-3 text-left transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] glass-panel ${
         !online ? "opacity-50" : overheat ? "neon-border-red" : "neon-border-cyan"
       }`}
@@ -215,6 +231,15 @@ export function ClientCard({ client, onClick }: Props) {
               <span className="text-muted-foreground">▶ </span>
               <span className="text-foreground">{client.topProcess}</span>
             </span>
+            <button
+              onClick={punish}
+              disabled={punishing}
+              title="Send 15-second warning overlay to this client"
+              className="absolute right-0 flex size-7 items-center justify-center rounded-md border transition hover:brightness-125 disabled:opacity-50"
+              style={{ borderColor: "var(--neon-red)55", color: "var(--neon-red)", background: "var(--neon-red)0d" }}
+            >
+              <AlertTriangle size={14} className={punishing ? "pulse-dot" : ""} />
+            </button>
           </div>
         </>
       ) : (
@@ -226,7 +251,7 @@ export function ClientCard({ client, onClick }: Props) {
           <div className="mt-1 text-[10px] text-muted-foreground/60">no signal</div>
         </div>
       )}
-    </button>
+    </div>
   );
 }
 
