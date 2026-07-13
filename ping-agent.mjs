@@ -12,9 +12,12 @@
 // ─────────────────────────────────────────────────────────────────────────
 
 import { createServer } from "node:http";
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { platform } from "node:os";
 import { createSocket } from "node:dgram";
+import { readFileSync, writeFileSync, unlinkSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import "dotenv/config";
 
 const PORT = Number(process.env.PING_AGENT_PORT || 8765);
@@ -50,6 +53,78 @@ const CORS = {
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+function runExe(file, args, timeout = 15000) {
+  return new Promise((resolve) => {
+    execFile(file, args, { timeout, windowsHide: true }, (err, stdout, stderr) => {
+      resolve({ ok: !err, code: err?.code, stdout: String(stdout || ""), stderr: String(stderr || ""), error: err?.message || "" });
+    });
+  });
+}
+
+function hostForMachine(machine, fallbackHost = "") {
+  if (fallbackHost) return fallbackHost;
+  const nn = String(machine || "").replace(/\D/g, "").padStart(2, "0");
+  return process.env.CLIENT_SUBNET ? `${process.env.CLIENT_SUBNET}${nn}` : `${process.env.MIKROTIK_SUBNET || "192.168.3.1"}${nn}`;
+}
+
+async function primeRemoteAuth(host, user, pass) {
+  if (!host || !user || !pass || platform() !== "win32") return;
+  await runExe("net", ["use", `\\\\${host}\\IPC$`, `/user:${user}`, pass, "/persistent:no"], 5000);
+  await runExe("net", ["use", `\\\\${host}\\ADMIN$`, `/user:${user}`, pass, "/persistent:no"], 5000);
+}
+
+async function runRemotePowerShell({ host, user, pass, script, timeout = 30000, prefer = "auto" }) {
+  if (platform() !== "win32") return { ok: false, method: "none", error: "requires Windows operator PC" };
+  await primeRemoteAuth(host, user, pass);
+  const encoded = Buffer.from(script, "utf16le").toString("base64");
+  const errors = [];
+
+  if (prefer !== "psexec") {
+    const ps = await runExe("powershell.exe", [
+      "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
+      `Invoke-Command -ComputerName '${host.replace(/'/g, "''")}' ${user ? `-Credential (New-Object pscredential('${String(user).replace(/'/g, "''")}',(ConvertTo-SecureString '${String(pass || "").replace(/'/g, "''")}' -AsPlainText -Force))) ` : ""}-ScriptBlock { param($b) powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand $b } -ArgumentList '${encoded}'`,
+    ], timeout);
+    if (ps.ok) return { ok: true, method: "winrm", stdout: ps.stdout };
+    errors.push(`winrm: ${(ps.stderr || ps.error).slice(0, 120)}`);
+
+    const stamp = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const local = path.join(__dirname, `.exir-remote-${stamp}.ps1`);
+    const remoteUnc = `\\\\${host}\\ADMIN$\\Temp\\exir-remote-${stamp}.ps1`;
+    const remotePath = `C:\\Windows\\Temp\\exir-remote-${stamp}.ps1`;
+    const task = `ExirRemote-${stamp}`;
+    try {
+      writeFileSync(local, script, "utf8");
+      const copy = await runExe("cmd.exe", ["/c", "copy", "/Y", local, remoteUnc], 10000);
+      if (copy.ok) {
+        const d = new Date(Date.now() + 60_000);
+        const st = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+        const base = ["/Create", "/S", host, "/TN", task, "/SC", "ONCE", "/ST", st, "/TR", `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${remotePath}"`, "/RL", "HIGHEST", "/F"];
+        const create = await runExe("schtasks.exe", user ? [...base, "/RU", user, "/RP", pass || ""] : [...base, "/RU", "SYSTEM"], 10000);
+        if (create.ok) {
+          const run = await runExe("schtasks.exe", ["/Run", "/S", host, "/TN", task], timeout);
+          await runExe("schtasks.exe", ["/Delete", "/S", host, "/TN", task, "/F"], 8000);
+          if (run.ok) return { ok: true, method: "schtasks", stdout: run.stdout };
+          errors.push(`schtasks/run: ${(run.stderr || run.error).slice(0, 120)}`);
+        } else errors.push(`schtasks/create: ${(create.stderr || create.error).slice(0, 120)}`);
+      } else errors.push(`copy: ${(copy.stderr || copy.error).slice(0, 120)}`);
+    } finally {
+      try { unlinkSync(local); } catch { /* ignore */ }
+    }
+  }
+
+  const psexec = process.env.PSEXEC_PATH || "psexec.exe";
+  const px = await runExe(psexec, [
+    "-accepteula", "-nobanner", `\\\\${host}`,
+    ...(user ? ["-u", user] : []), ...(pass ? ["-p", pass] : []),
+    "-h", "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-EncodedCommand", encoded,
+  ], timeout);
+  if (px.ok) return { ok: true, method: "psexec", stdout: px.stdout };
+  errors.push(`psexec: ${(px.stderr || px.error).slice(0, 160)}`);
+  return { ok: false, method: "failed", error: errors.join(" | ") };
+}
 
 const server = createServer((req, res) => {
   if (req.method === "OPTIONS") {
