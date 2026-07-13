@@ -482,8 +482,8 @@ function CacheSshEditor() {
       </h2>
       <p className="mb-3 font-mono text-[11px] text-muted-foreground">
         The local agent SSHes into your LanCache host and tails
-        <span className="font-bold"> {DEFAULT_CACHE_SSH.logPath}</span> plus DNS queries when enabled. Per-client
-        HIT/MISS/DNS-only status appears on every VIP card and in Discovery.
+        <span className="font-bold"> {DEFAULT_CACHE_SSH.logPath}</span>. Per-client
+        HIT/MISS status appears on every VIP card and in the Cache Activity panel.
       </p>
       <div className="mb-3 flex items-center gap-2">
         <input
@@ -517,23 +517,6 @@ function CacheSshEditor() {
         <div className="md:col-span-2">
           <Field label="log path">
             <input value={cfg.logPath} onChange={(e) => update({ logPath: e.target.value })}
-              className="w-full rounded border border-border bg-background/60 px-2 py-1.5 font-mono text-xs outline-none focus:border-cyan-500" />
-          </Field>
-        </div>
-        <div className="md:col-span-2 rounded-lg border border-border/60 bg-surface/30 p-3">
-          <div className="mb-2 flex items-center gap-2">
-            <input
-              id="cache-query-enabled"
-              type="checkbox"
-              checked={cfg.queryEnabled}
-              onChange={(e) => update({ queryEnabled: e.target.checked })}
-            />
-            <label htmlFor="cache-query-enabled" className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-              enable DNS queries.log discovery source
-            </label>
-          </div>
-          <Field label="queries.log path">
-            <input value={cfg.queryLogPath} onChange={(e) => update({ queryLogPath: e.target.value })}
               className="w-full rounded border border-border bg-background/60 px-2 py-1.5 font-mono text-xs outline-none focus:border-cyan-500" />
           </Field>
         </div>
