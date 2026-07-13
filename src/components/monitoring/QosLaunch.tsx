@@ -197,7 +197,7 @@ export function QosLaunch({ machines }: Props) {
                 })}
               </div>
               <div className="mt-1 text-center font-mono text-[8px] uppercase text-muted-foreground">
-                agent → mikrotik
+                agent → {backend}
               </div>
             </div>
           );
