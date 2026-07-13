@@ -13,9 +13,9 @@
 
 import { createServer } from "node:http";
 import { execFile } from "node:child_process";
-import { platform, networkInterfaces } from "node:os";
+import { platform, tmpdir } from "node:os";
 import { createSocket } from "node:dgram";
-import { randomBytes } from "node:crypto";
+import { promises as fs } from "node:fs";
 import "dotenv/config";
 
 const PORT = Number(process.env.PING_AGENT_PORT || 8765);
@@ -385,154 +385,79 @@ function runShutdown(args, user, pass, host, machine) {
       });
     };
 
-    // Clear any stale/conflicting SMB session first (e.g. an open UltraVNC
-    // or Explorer connection to this host under different credentials),
-    // then establish auth to remote IPC$ (best-effort) and run.
-    (async () => {
-      await clearSmbSession(host);
-      if (user && pass) {
-        execFile("net", ["use", `\\\\${host}\\IPC$`, `/user:${user}`, pass, "/persistent:no"], { timeout: 5000 }, () => tryShutdown());
-      } else tryShutdown();
-    })();
+    // Establish auth to remote IPC$ first (best-effort) then run.
+    if (user && pass) {
+      execFile("net", ["use", `\\\\${host}\\IPC$`, `/user:${user}`, pass], { timeout: 5000 }, () => tryShutdown());
+    } else tryShutdown();
   });
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Send Message — shows the styled popup (built by the dashboard,
-// message-template.ts) right on the client PC's screen.
+// Send Message — deploys a self-contained .hta (built by the dashboard,
+// message-template.ts) to the client PC and opens it with mshta.exe *inside
+// the user's interactive desktop session*, so the styled popup actually
+// appears on their screen (not hidden in a background session).
 //
-// Earlier version copied the .hta to \\host\C$\Windows\Temp first — but on
-// networks where another tool (UltraVNC, SmartLaunch, etc.) keeps its own
-// SMB session open to the client (often under a Windows *service* account,
-// which isn't even visible to `net use` run as our own user), that copy
-// step reliably hits error 1219 ("Multiple connections... not allowed") no
-// matter how thoroughly we clear our own sessions first.
-//
-// So instead we avoid touching the client's file share entirely:
-//   1) The message HTML is kept in memory here, behind a random one-time
-//      token, served over plain HTTP on the LAN (see messageServer below —
-//      completely separate from the main :8765 server, which stays
-//      localhost-only).
-//   2) PsExec runs a tiny, fixed PowerShell one-liner (via -EncodedCommand,
-//      the same proven technique already used for GoodSync folder sharing
-//      in this file) *inside the user's interactive session* — it just
-//      downloads that one URL and opens it with mshta.exe. No file share,
-//      no `net use`, nothing that a conflicting SMB session can block.
-//   3) WMIC is a fallback if PsExec isn't installed — same one-liner, but
-//      note WMIC always runs in Session 0, so the popup won't be visible
-//      to the user in that fallback.
+// Delivery path, same layering as power control:
+//   1) net use \\host\IPC$  → authenticate with admin creds
+//   2) copy the .hta to \\host\C$\Windows\Temp\ via the admin share
+//   3) PsExec -i -d mshta.exe "<remote path>"  → run in interactive session
+//   4) WMIC process call create (fallback if PsExec isn't installed) — note:
+//      WMIC always launches in Session 0, so the popup won't be visible to
+//      the user in that fallback. Install Sysinternals PsExec on the admin
+//      PC (and put it on PATH) for guaranteed visibility.
 // ─────────────────────────────────────────────────────────────────────────
-
-const MESSAGE_PAYLOADS = new Map(); // token -> { html, expires }
-const MESSAGE_TOKEN_TTL_MS = 3 * 60 * 1000;
-
-function putMessagePayload(html) {
-  const token = randomBytes(16).toString("hex");
-  const expires = Date.now() + MESSAGE_TOKEN_TTL_MS;
-  MESSAGE_PAYLOADS.set(token, { html, expires });
-  return token;
-}
-
-function takeMessagePayload(token) {
-  const rec = MESSAGE_PAYLOADS.get(token);
-  if (!rec) return null;
-  MESSAGE_PAYLOADS.delete(token); // single-use
-  if (Date.now() > rec.expires) return null;
-  return rec.html;
-}
-
-// Periodically sweep anything nobody ever picked up.
-setInterval(() => {
-  const now = Date.now();
-  for (const [token, rec] of MESSAGE_PAYLOADS) {
-    if (now > rec.expires) MESSAGE_PAYLOADS.delete(token);
-  }
-}, 60_000).unref?.();
-
-// Best-effort: find this PC's LAN IPv4 address (the one the client PCs can
-// actually reach), preferring an interface on the configured client subnet.
-function getLanIp() {
-  const prefix = process.env.CLIENT_SUBNET || process.env.MIKROTIK_SUBNET?.replace(/\d+$/, "") || "192.168.3.";
-  const nets = networkInterfaces();
-  let fallback = null;
-  for (const name of Object.keys(nets)) {
-    for (const net of nets[name] || []) {
-      if (net.family !== "IPv4" || net.internal) continue;
-      if (net.address.startsWith(prefix)) return net.address;
-      if (!fallback) fallback = net.address;
-    }
-  }
-  return fallback;
-}
-
-const MESSAGE_SERVE_PORT = Number(process.env.MESSAGE_SERVE_PORT || 8766);
-let messageServerLanIp = null;
-
-const messageServer = createServer((req, res) => {
-  const m = req.url && req.url.match(/^\/msg\/([a-f0-9]{32})$/);
-  if (!m) { res.writeHead(404); return res.end("not found"); }
-  const html = takeMessagePayload(m[1]);
-  if (!html) { res.writeHead(404); return res.end("expired or already used"); }
-  res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-  res.end(html);
-});
-messageServer.on("error", (e) => {
-  console.error("  message server error:", e.message);
-});
-
-function ensureMessageServerStarted() {
-  if (messageServerLanIp !== null) return messageServerLanIp; // already started (or failed once)
-  messageServerLanIp = getLanIp() || "";
-  messageServer.listen(MESSAGE_SERVE_PORT, "0.0.0.0", () => {
-    console.log(`  ⚡ message payload server ready → http://${messageServerLanIp || "?"}:${MESSAGE_SERVE_PORT}\n`);
-  });
-  return messageServerLanIp;
-}
-
 async function handleMessage(body) {
   const { machine, host, user, pass, html } = JSON.parse(body || "{}");
   if (!host) return { ok: false, error: "host required" };
   if (!html || typeof html !== "string") return { ok: false, error: "html required" };
-  if (platform() !== "win32") return { ok: false, error: "remote message delivery requires Windows operator PC" };
+  const IS_WIN = platform() === "win32";
+  if (!IS_WIN) return { ok: false, error: "remote message delivery requires Windows operator PC" };
 
-  const lanIp = ensureMessageServerStarted();
-  if (!lanIp) {
-    return { ok: false, error: "نتوانستم آی‌پی شبکه‌ی محلی PC ادمین را تشخیص دهم — CLIENT_SUBNET را در .env بررسی کنید." };
+  const fileName = `exir-msg-${Date.now()}.hta`;
+  const localTmp = path.join(tmpdir(), fileName);
+  const remoteDir = `\\\\${host}\\C$\\Windows\\Temp`;
+  const remotePath = `${remoteDir}\\${fileName}`;
+  const remoteLocalPath = `C:\\Windows\\Temp\\${fileName}`;
+
+  try {
+    await fs.writeFile(localTmp, html, "utf8");
+  } catch (e) {
+    return { ok: false, error: `could not stage temp file: ${e.message}` };
   }
 
-  const token = putMessagePayload(html);
-  const url = `http://${lanIp}:${MESSAGE_SERVE_PORT}/msg/${token}`;
+  const authenticate = () =>
+    new Promise((resolve) => {
+      if (user && pass) {
+        execFile("net", ["use", `\\\\${host}\\IPC$`, `/user:${user}`, pass], { timeout: 5000 }, () => resolve());
+      } else resolve();
+    });
 
-  // Small, fixed PowerShell one-liner — only the URL varies, so this stays
-  // well under any command-line length limit regardless of how large the
-  // message (image/font) is.
-  const psScript =
-    `$ProgressPreference='SilentlyContinue'; ` +
-    `$h=(Invoke-WebRequest -UseBasicParsing -Uri '${url}').Content; ` +
-    `$p="$env:TEMP\\exir-msg-${Date.now()}.hta"; ` +
-    `Set-Content -Path $p -Value $h -Encoding UTF8; ` +
-    `Start-Process 'mshta.exe' -ArgumentList $p`;
-  const psB64 = Buffer.from(psScript, "utf16le").toString("base64");
+  const copyToRemote = () =>
+    fs.copyFile(localTmp, remotePath).then(
+      () => ({ ok: true }),
+      (e) => ({ ok: false, error: e.message }),
+    );
 
-  // 45s: first-time PsExec runs install the PSEXESVC service on the remote
-  // machine — antivirus products commonly scan psexec-related executables
-  // in real time, which can add real delay before the service starts.
-  const PSEXEC_TIMEOUT_MS = 45_000;
+  await authenticate();
+  const copyResult = await copyToRemote();
+  if (!copyResult.ok) {
+    await fs.unlink(localTmp).catch(() => {});
+    return {
+      ok: false,
+      error: `could not copy to \\\\${host}\\C$ (${copyResult.error}). Check admin creds and that Admin$/C$ sharing is enabled.`,
+    };
+  }
 
   return await new Promise((resolve) => {
+    const cleanupLocal = () => fs.unlink(localTmp).catch(() => {});
+
     const tryPsExec = () => {
-      const psArgs = [
-        `\\\\${host}`, "-u", user, "-p", pass, "-h", "-i", "-d", "-accepteula",
-        "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-EncodedCommand", psB64,
-      ];
-      execFile("psexec", psArgs, { timeout: PSEXEC_TIMEOUT_MS }, (err, _out, stderr) => {
+      const psArgs = [`\\\\${host}`, "-u", user, "-p", pass, "-i", "-d", "-accepteula", "mshta.exe", remoteLocalPath];
+      execFile("psexec", psArgs, { timeout: 15000 }, (err, _out, stderr) => {
+        cleanupLocal();
         if (!err) return resolve({ ok: true, note: `psexec → ${machine || host}` });
         if (err.code === "ENOENT") return tryWmic();
-        if (err.killed || err.signal) {
-          return tryWmic(
-            `psexec زمان زیادی طول کشید و قطع شد (احتمالاً به‌خاطر اسکن آنتی‌ویروس روی PSEXESVC.exe — آن را در آنتی‌ویروس هر دو سیستم Exclude کنید)`,
-          );
-        }
         const msg = (stderr || err.message || "").toString().trim();
         resolve({ ok: false, error: `psexec: ${msg.slice(0, 200)}` });
       });
@@ -540,19 +465,19 @@ async function handleMessage(body) {
 
     // Fallback: WMIC can launch the process remotely, but only in Session 0
     // (non-interactive) — the window won't be visible without PsExec.
-    const tryWmic = (prevNote) => {
-      const cmd = `powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand ${psB64}`;
+    const tryWmic = () => {
+      const cmd = `mshta.exe ${remoteLocalPath}`;
       const wmicArgs = ["/node:" + host, "/user:" + user, "/password:" + pass, "process", "call", "create", cmd];
-      execFile("wmic", wmicArgs, { timeout: PSEXEC_TIMEOUT_MS }, (err, _out, stderr) => {
+      execFile("wmic", wmicArgs, { timeout: 15000 }, (err, _out, stderr) => {
+        cleanupLocal();
         if (!err) {
           return resolve({
             ok: true,
-            note: (prevNote ? prevNote + " — " : "") +
-              `wmic → ${machine || host} (پنجره ممکن است دیده نشود چون WMIC در سشن غیرتعاملی اجرا می‌کند)`,
+            note: `wmic → ${machine || host} (PsExec not found — window may be invisible; install PsExec for guaranteed visibility)`,
           });
         }
         const msg = (stderr || err.message || "").toString().trim();
-        resolve({ ok: false, error: `${prevNote ? prevNote + " — " : ""}wmic هم شکست خورد: ${msg.slice(0, 200)}` });
+        resolve({ ok: false, error: `no PsExec found, wmic also failed: ${msg.slice(0, 200)}` });
       });
     };
 
@@ -695,26 +620,12 @@ const NL_TIER_BPS = Object.fromEntries(
 // "Access is denied" (کد 5) یا "Multiple connections..." (کد 1219) رد
 // می‌شه. پاک کردن Session قبل از هر تلاش این تداخل رو حذف می‌کنه.
 function clearSmbSession(host) {
-  const runNet = (args) =>
-    new Promise((resolve) => execFile("net", args, { timeout: 8000 }, (err, out, stderr) => resolve({ err, out, stderr })));
-  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-  return (async () => {
-    const listed = await runNet(["use"]);
-    const text = listed.out || "";
-    const targets = new Set([`\\\\${host}\\IPC$`, `\\\\${host}\\C$`, `\\\\${host}\\ADMIN$`]);
-    for (const line of text.split(/\r?\n/)) {
-      if (!line.toLowerCase().includes(String(host).toLowerCase())) continue;
-      const uncMatch = line.match(/\\\\\S+/);
-      if (uncMatch) targets.add(uncMatch[0]);
-      const driveMatch = line.match(/\b([A-Z]:)\s+\\\\/);
-      if (driveMatch) targets.add(driveMatch[1]);
-    }
-    for (const t of targets) {
-      await runNet(["use", t, "/delete", "/y"]);
-    }
-    await sleep(300); // give Windows a moment to actually release the session
-  })();
+  return new Promise((resolve) => {
+    execFile("net", ["use", `\\\\${host}\\IPC$`, "/delete", "/y"], { timeout: 5000 }, () => {
+      // نتیجه مهم نیست؛ اگه Sessionای نبود هم خطا می‌ده که بی‌ضرره.
+      resolve();
+    });
+  });
 }
 
 async function handleQosNetLimiter({ machine, enabled, tier }) {
