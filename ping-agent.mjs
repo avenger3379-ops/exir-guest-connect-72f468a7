@@ -307,6 +307,20 @@ const server = createServer((req, res) => {
     return res.end(JSON.stringify({ ok: true, jobs: listGsJobs() }));
   }
 
+  // ── Client screen actions (message / 15s warning) ─────────────────────
+  if (req.method === "POST" && (req.url === "/message" || req.url === "/punish")) {
+    let body = "";
+    const url = req.url;
+    req.on("data", (c) => { body += c; if (body.length > 30_000) req.destroy(); });
+    req.on("end", () => {
+      const p = url === "/message" ? handleClientMessage(body) : handlePunish(body);
+      void p
+        .then((r) => { res.writeHead(200, { ...CORS, "Content-Type": "application/json" }); res.end(JSON.stringify(r)); })
+        .catch((e) => { res.writeHead(200, { ...CORS, "Content-Type": "application/json" }); res.end(JSON.stringify({ ok: false, error: String(e?.message || e) })); });
+    });
+    return;
+  }
+
   res.writeHead(404, CORS);
   res.end();
 });
@@ -515,7 +529,6 @@ const NL_TIER_BPS = {
 // created on each client (see Setup-NetLimiter-Rules.ps1 shipped with the repo).
 // Rule names: Exir-500K, Exir-1M, Exir-2M, Exir-UNL. Only one is enabled at a time.
 async function handleQosNetLimiter({ machine, enabled, tier }) {
-  const psexec = process.env.PSEXEC_PATH || "psexec.exe";
   const nlq = process.env.NETLIMITER_NLQ || "C:\\Program Files\\Locktime Software\\NetLimiter 4\\nlq.exe";
   const user = process.env.CLIENT_ADMIN_USER || process.env.MIKROTIK_USER;
   const pass = process.env.CLIENT_ADMIN_PASS || process.env.MIKROTIK_PASS;
@@ -523,7 +536,7 @@ async function handleQosNetLimiter({ machine, enabled, tier }) {
   const host = process.env.CLIENT_SUBNET
     ? `${process.env.CLIENT_SUBNET}${nn}`
     : `${process.env.MIKROTIK_SUBNET || "192.168.3.1"}${nn}`;
-  const machineHost = machine || `VIP${nn}`; // psexec accepts hostname too
+  const machineHost = machine || `VIP${nn}`;
 
   const tiers = ["500K", "1M", "2M", "UNL"];
   const activeTier = enabled && tier !== "off" ? tier : null;
@@ -541,32 +554,12 @@ async function handleQosNetLimiter({ machine, enabled, tier }) {
     cmds.push({ rule: `Exir-${activeTier}`, enable: 1, limit: bps });
   }
 
-  const results = [];
-  for (const c of cmds) {
-    const args = [
-      "-accepteula", "-nobanner",
-      `\\\\${host}`,
-      ...(user ? ["-u", user] : []),
-      ...(pass ? ["-p", pass] : []),
-      "-h", "-d",
-      nlq, "SetLimit",
-      `/rule=${c.rule}`, "/dir=both", `/enable=${c.enable}`, `/limit=${c.limit}`,
-    ];
-    // eslint-disable-next-line no-await-in-loop
-    const r = await new Promise((resolve) => {
-      execFile(psexec, args, { timeout: 15000, windowsHide: true }, (err, _stdout, stderr) => {
-        if (err && err.code === "ENOENT") {
-          return resolve({ rule: c.rule, ok: false, error: "psexec not found (set PSEXEC_PATH or install PsExec)" });
-        }
-        if (err) return resolve({ rule: c.rule, ok: false, error: (stderr || err.message || "").toString().slice(0, 200) });
-        resolve({ rule: c.rule, ok: true });
-      });
-    });
-    results.push(r);
-    if (!r.ok && r.error?.includes("psexec not found")) break;
-  }
-
-  const ok = results.every((r) => r.ok);
+  const commandLines = cmds.map((c) => `& '${nlq.replace(/'/g, "''")}' SetLimit '/rule=${c.rule}' '/dir=both' '/enable=${c.enable}' '/limit=${c.limit}'`).join("\n");
+  const remote = await runRemotePowerShell({
+    host, user, pass, timeout: 20000,
+    script: `$ErrorActionPreference='Stop'\n${commandLines}\n'netlimiter qos applied'`,
+  });
+  const ok = remote.ok;
   return {
     ok,
     backend: "netlimiter",
@@ -574,8 +567,90 @@ async function handleQosNetLimiter({ machine, enabled, tier }) {
     host,
     tier: activeTier || "off",
     limit_bps: activeTier && activeTier !== "UNL" ? Math.round(NL_TIER_BPS[activeTier]) : (activeTier === "UNL" ? "unlimited" : 0),
-    results,
+    method: remote.method,
+    error: remote.ok ? undefined : remote.error,
+    results: cmds.map((c) => ({ rule: c.rule, ok })),
   };
+}
+
+function psQuote(s) {
+  return String(s || "").replace(/'/g, "''");
+}
+
+function overlayScript({ title, message, seconds = 15, severe = false }) {
+  const sec = Math.max(3, Math.min(60, Number(seconds) || 15));
+  const body = psQuote(message || (severe ? "اخطار جدی" : "پیام مدیریت"));
+  const ttl = psQuote(title || (severe ? "WARNING" : "EXIR MESSAGE"));
+  return `
+Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
+$seconds=${sec}; $remaining=$seconds
+$window=New-Object Windows.Window
+$window.WindowStyle='None'; $window.ResizeMode='NoResize'; $window.Topmost=$true; $window.ShowInTaskbar=$false
+$window.WindowState='Maximized'; $window.Background=[Windows.Media.Brushes]::Transparent
+$window.Add_Closing({ if ($script:remaining -gt 0) { $_.Cancel=$true } })
+$window.Add_PreviewKeyDown({ if ($_.Key -eq 'Escape' -or ($_.SystemKey -eq 'F4') -or ($_.KeyboardDevice.Modifiers -ne 'None')) { $_.Handled=$true } })
+$root=New-Object Windows.Controls.Grid
+$root.Background=(New-Object Windows.Media.SolidColorBrush ([Windows.Media.Color]::FromArgb(210,4,8,18)))
+$card=New-Object Windows.Controls.Border
+$card.Width=760; $card.MinHeight=420; $card.CornerRadius='28'; $card.Padding='34'; $card.BorderThickness='2'
+$card.BorderBrush=(New-Object Windows.Media.SolidColorBrush ([Windows.Media.Color]::FromRgb(255,55,85)))
+$card.Background=(New-Object Windows.Media.SolidColorBrush ([Windows.Media.Color]::FromArgb(175,15,23,42)))
+$card.Effect=New-Object Windows.Media.Effects.DropShadowEffect -Property @{ Color=[Windows.Media.Colors]::Red; BlurRadius=38; ShadowDepth=0; Opacity=.85 }
+$panel=New-Object Windows.Controls.StackPanel
+$icon=New-Object Windows.Controls.TextBlock
+$icon.Text='⚠'; $icon.FontSize=112; $icon.HorizontalAlignment='Center'; $icon.Foreground=(New-Object Windows.Media.SolidColorBrush ([Windows.Media.Color]::FromRgb(255,45,85)))
+$label=New-Object Windows.Controls.TextBlock
+$label.Text='${ttl}'; $label.FontSize=32; $label.FontWeight='Black'; $label.TextAlignment='Center'; $label.Foreground=[Windows.Media.Brushes]::White; $label.Margin='0,0,0,8'
+$msg=New-Object Windows.Controls.TextBlock
+$msg.Text='${body}'; $msg.FontSize=26; $msg.TextWrapping='Wrap'; $msg.TextAlignment='Center'; $msg.Foreground=(New-Object Windows.Media.SolidColorBrush ([Windows.Media.Color]::FromRgb(226,232,240))); $msg.Margin='0,0,0,22'
+$timer=New-Object Windows.Controls.TextBlock
+$timer.Text="$remaining"; $timer.FontSize=56; $timer.FontWeight='Black'; $timer.TextAlignment='Center'; $timer.Foreground=(New-Object Windows.Media.SolidColorBrush ([Windows.Media.Color]::FromRgb(34,211,238)))
+$bar=New-Object Windows.Controls.ProgressBar
+$bar.Minimum=0; $bar.Maximum=$seconds; $bar.Value=$seconds; $bar.Height=18; $bar.Margin='40,18,40,0'; $bar.Foreground=(New-Object Windows.Media.SolidColorBrush ([Windows.Media.Color]::FromRgb(255,45,85)))
+$panel.Children.Add($icon)|Out-Null; $panel.Children.Add($label)|Out-Null; $panel.Children.Add($msg)|Out-Null; $panel.Children.Add($timer)|Out-Null; $panel.Children.Add($bar)|Out-Null
+$card.Child=$panel; $root.Children.Add($card)|Out-Null; $window.Content=$root
+$beep=New-Object Windows.Threading.DispatcherTimer; $beep.Interval=[TimeSpan]::FromMilliseconds(650)
+$beep.Add_Tick({ [Console]::Beep(1200,160) })
+$tick=New-Object Windows.Threading.DispatcherTimer; $tick.Interval=[TimeSpan]::FromSeconds(1)
+$tick.Add_Tick({ $script:remaining--; $timer.Text=[string]$script:remaining; $bar.Value=$script:remaining; if ($script:remaining -le 0) { $beep.Stop(); $tick.Stop(); $window.Close() } })
+$window.Add_Loaded({ $beep.Start(); $tick.Start(); $window.Activate() })
+$window.ShowDialog() | Out-Null
+`;
+}
+
+async function runInteractiveOverlay({ host, user, pass, script, timeout = 30000 }) {
+  const psexec = process.env.PSEXEC_PATH || "psexec.exe";
+  const encoded = Buffer.from(script, "utf16le").toString("base64");
+  const px = await runExe(psexec, [
+    "-accepteula", "-nobanner", `\\\\${host}`,
+    ...(user ? ["-u", user] : []), ...(pass ? ["-p", pass] : []),
+    "-h", "-i", "-d", "powershell.exe", "-STA", "-NoProfile", "-ExecutionPolicy", "Bypass", "-EncodedCommand", encoded,
+  ], timeout);
+  if (px.ok) return { ok: true, method: "psexec-interactive" };
+  const msg = await runExe("msg.exe", ["/SERVER:" + host, "*", "/TIME:15", script.includes("اخطار") ? "اخطار جدی مدیریت" : "پیام مدیریت"], 8000);
+  if (msg.ok) return { ok: true, method: "msg-fallback" };
+  return { ok: false, method: "failed", error: `psexec: ${(px.stderr || px.error).slice(0, 140)} | msg: ${(msg.stderr || msg.error).slice(0, 140)}` };
+}
+
+async function handlePunish(body) {
+  const { machine, host: postedHost, seconds, message } = JSON.parse(body || "{}");
+  if (!machine && !postedHost) return { ok: false, error: "machine required" };
+  const host = hostForMachine(machine, postedHost);
+  const user = process.env.CLIENT_ADMIN_USER || process.env.MIKROTIK_USER;
+  const pass = process.env.CLIENT_ADMIN_PASS || process.env.MIKROTIK_PASS;
+  const r = await runInteractiveOverlay({ host, user, pass, timeout: 25000, script: overlayScript({ title: "هشدار جدی", message: message || "لطفاً قوانین سیستم را رعایت کنید", seconds: seconds || 15, severe: true }) });
+  return { ...r, machine, host };
+}
+
+async function handleClientMessage(body) {
+  const { machine, host: postedHost, title, message, seconds } = JSON.parse(body || "{}");
+  if (!machine && !postedHost) return { ok: false, error: "machine required" };
+  if (!message) return { ok: false, error: "message required" };
+  const host = hostForMachine(machine, postedHost);
+  const user = process.env.CLIENT_ADMIN_USER || process.env.MIKROTIK_USER;
+  const pass = process.env.CLIENT_ADMIN_PASS || process.env.MIKROTIK_PASS;
+  const r = await runInteractiveOverlay({ host, user, pass, timeout: 25000, script: overlayScript({ title: title || "EXIR MESSAGE", message, seconds: seconds || 15, severe: false }) });
+  return { ...r, machine, host };
 }
 
 // ── GoodSync CLI runner ─────────────────────────────────────────────────
