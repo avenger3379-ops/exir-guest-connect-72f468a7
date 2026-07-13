@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { AlertTriangle, Cpu, MemoryStick, Thermometer } from "lucide-react";
 import type { ClientStatus } from "@/lib/monitoring-types";
 import { CircularGauge } from "./CircularGauge";
@@ -118,7 +118,7 @@ export function ClientCard({ client, onClick }: Props) {
       .replace(/\s+/g, " ")
       .trim() || client.gpuName;
 
-  async function punish(e: React.MouseEvent) {
+  async function punish(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
     if (punishing || !online) return;
