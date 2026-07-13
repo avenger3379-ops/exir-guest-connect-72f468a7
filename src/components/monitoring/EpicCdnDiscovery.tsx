@@ -361,6 +361,13 @@ function Mini({ icon, label, value, color }: { icon: React.ReactNode; label: str
     </div>
   );
 }
+function statusColor(status: string): string {
+  if (status === "Cached") return "var(--neon-green)";
+  if (status === "Miss") return "var(--neon-red)";
+  if (status === "DNS Only") return "var(--neon-cyan)";
+  if (status === "New") return "var(--neon-amber)";
+  return "oklch(0.65 0.02 250)";
+}
 function timeAgo(t: number): string {
   const s = Math.max(0, Math.round((Date.now() - t) / 1000));
   if (s < 60) return `${s}s ago`;
