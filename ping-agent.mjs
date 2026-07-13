@@ -593,14 +593,8 @@ async function handleQosNetLimiter({ machine, enabled, tier }) {
 // Configure via env (default path shown):
 //   GOODSYNC_PATH=C:\Program Files\Siber Systems\GoodSync\gs-runner.exe
 //
-// ShareEpicFolders.ps1 is spawned remotely via PsExec using the same
-// CLIENT_ADMIN_USER/PASS + CLIENT_SUBNET envs used by the power/qos flows.
-import { spawn } from "node:child_process";
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// ShareEpicFolders.ps1 is spawned remotely using WinRM / Scheduled Task / PsExec
+// fallback with the same CLIENT_ADMIN_USER/PASS + CLIENT_SUBNET envs.
 
 // key → { machine, game, jobs, proc, startedAt, finishedAt, running, ok, exitCode, lastLine, error }
 const GS_JOBS = new Map();
