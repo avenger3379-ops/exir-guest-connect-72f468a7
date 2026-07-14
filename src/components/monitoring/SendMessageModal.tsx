@@ -43,6 +43,9 @@ export function SendMessageModal({ machine, onClose }: Props) {
   }, [btn1, secondBtnOn, btn2]);
 
   // Debounced live preview — regenerates the exact HTML that would be sent.
+  // Long debounce (900ms) + only-when-idle so the iframe doesn't rebuild on
+  // every keystroke (that was stealing focus / making it feel like the whole
+  // panel was refreshing while typing).
   useEffect(() => {
     let cancelled = false;
     const t = setTimeout(() => {
@@ -58,7 +61,7 @@ export function SendMessageModal({ machine, onClose }: Props) {
       }).then((html) => {
         if (!cancelled) setPreviewHtml(html);
       });
-    }, 200);
+    }, 900);
     return () => {
       cancelled = true;
       clearTimeout(t);
