@@ -521,11 +521,37 @@ function runShutdown(args, user, pass, host, machine) {
 // the admin share, then launches it with `mshta.exe <local temp path>` on
 // the client via PsExec -i 1 (interactive session), same
 // auth-then-execute shape as runShutdown() above.
+// Try the persistent client agent (Files/exir-client-agent) first.
+// If it answers, we don't need PsExec/WMIC at all — no SmartLaunch / UVNC /
+// NetLimiter conflicts. If it's unreachable, fall through to the old path.
+async function tryClientAgent(host, path, payload, timeoutMs = 3000) {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    const r = await fetch(`http://${host}:8766${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: ctrl.signal,
+    }).finally(() => clearTimeout(t));
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && j.ok) return { ok: true, note: j.note || `client-agent → ${host}` };
+    return { ok: false, error: j.error || `client-agent HTTP ${r.status}` };
+  } catch (e) {
+    return { ok: false, error: `client-agent unreachable: ${String(e?.message || e)}` };
+  }
+}
+
 async function handleMessage(body) {
   const { host, user, pass, html } = JSON.parse(body || "{}");
   if (!host) return { ok: false, error: "host required" };
   if (!html) return { ok: false, error: "html required" };
-  if (!IS_WIN) return { ok: false, error: "requires Windows operator PC" };
+
+  // PREFERRED path: client agent (no PsExec, no admin creds needed).
+  const via = await tryClientAgent(host, "/message", { html });
+  if (via.ok) return via;
+  // If the client agent isn't installed yet, keep the old fallback alive.
+  if (!IS_WIN) return { ok: false, error: `${via.error} · fallback needs Windows operator PC` };
 
   const fname = `exir_msg_${Date.now()}.hta`;
   const remoteUncPath = `\\\\${host}\\C$\\Windows\\Temp\\${fname}`;
