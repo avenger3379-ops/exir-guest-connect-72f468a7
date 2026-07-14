@@ -195,6 +195,26 @@ const server = createServer((req, res) => {
     return;
   }
 
+  // ── NetLimiter re-apply (after UVNC / SmartLaunch clobbers rules) ────
+  // Just forwards to the client-side exir-client-agent on :8766.
+  if (req.method === "POST" && req.url === "/netlimiter/reapply") {
+    let body = "";
+    req.on("data", (c) => { body += c; if (body.length > 4_000) req.destroy(); });
+    req.on("end", async () => {
+      try {
+        const { host, tier } = JSON.parse(body || "{}");
+        if (!host) throw new Error("host required");
+        const r = await tryClientAgent(host, "/netlimiter/apply", { tier }, 4000);
+        res.writeHead(200, { ...CORS, "Content-Type": "application/json" });
+        res.end(JSON.stringify(r));
+      } catch (e) {
+        res.writeHead(200, { ...CORS, "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: false, error: String(e?.message || e) }));
+      }
+    });
+    return;
+  }
+
   // ── Power control (WoL / Shutdown / Restart / Logoff) ────────────────
   if (req.method === "POST" && req.url === "/power") {
     let body = "";
@@ -521,11 +541,37 @@ function runShutdown(args, user, pass, host, machine) {
 // the admin share, then launches it with `mshta.exe <local temp path>` on
 // the client via PsExec -i 1 (interactive session), same
 // auth-then-execute shape as runShutdown() above.
+// Try the persistent client agent (Files/exir-client-agent) first.
+// If it answers, we don't need PsExec/WMIC at all — no SmartLaunch / UVNC /
+// NetLimiter conflicts. If it's unreachable, fall through to the old path.
+async function tryClientAgent(host, path, payload, timeoutMs = 3000) {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    const r = await fetch(`http://${host}:8766${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: ctrl.signal,
+    }).finally(() => clearTimeout(t));
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && j.ok) return { ok: true, note: j.note || `client-agent → ${host}` };
+    return { ok: false, error: j.error || `client-agent HTTP ${r.status}` };
+  } catch (e) {
+    return { ok: false, error: `client-agent unreachable: ${String(e?.message || e)}` };
+  }
+}
+
 async function handleMessage(body) {
   const { host, user, pass, html } = JSON.parse(body || "{}");
   if (!host) return { ok: false, error: "host required" };
   if (!html) return { ok: false, error: "html required" };
-  if (!IS_WIN) return { ok: false, error: "requires Windows operator PC" };
+
+  // PREFERRED path: client agent (no PsExec, no admin creds needed).
+  const via = await tryClientAgent(host, "/message", { html });
+  if (via.ok) return via;
+  // If the client agent isn't installed yet, keep the old fallback alive.
+  if (!IS_WIN) return { ok: false, error: `${via.error} · fallback needs Windows operator PC` };
 
   const fname = `exir_msg_${Date.now()}.hta`;
   const remoteUncPath = `\\\\${host}\\C$\\Windows\\Temp\\${fname}`;

@@ -43,6 +43,9 @@ export function SendMessageModal({ machine, onClose }: Props) {
   }, [btn1, secondBtnOn, btn2]);
 
   // Debounced live preview — regenerates the exact HTML that would be sent.
+  // Long debounce (900ms) + only-when-idle so the iframe doesn't rebuild on
+  // every keystroke (that was stealing focus / making it feel like the whole
+  // panel was refreshing while typing).
   useEffect(() => {
     let cancelled = false;
     const t = setTimeout(() => {
@@ -58,7 +61,7 @@ export function SendMessageModal({ machine, onClose }: Props) {
       }).then((html) => {
         if (!cancelled) setPreviewHtml(html);
       });
-    }, 200);
+    }, 900);
     return () => {
       cancelled = true;
       clearTimeout(t);
@@ -112,7 +115,15 @@ export function SendMessageModal({ machine, onClose }: Props) {
     });
     setBusy(false);
     setMsgOk(!!r.ok);
-    setMsg(r.ok ? `پیام ارسال شد${r.note ? ` (${r.note})` : ""}` : `ارسال ناموفق: ${r.error || "؟"}`);
+    if (r.ok) {
+      setMsg(`پیام ارسال شد${r.note ? ` (${r.note})` : ""}`);
+    } else {
+      const err = r.error || "؟";
+      const hint = /agent unreachable|Failed to fetch/i.test(err)
+        ? " — مطمئن شو ping-agent روی سرور بازه و اگر روی کلاینت هم exir-client-agent نصب کردی، ری‌استارت کن (Files/exir-client-agent/README.txt)."
+        : "";
+      setMsg(`ارسال ناموفق: ${err}${hint}`);
+    }
   }
 
   return (
