@@ -128,7 +128,12 @@ export async function launchVnc(cfg: VncConfig, machine: string): Promise<
       signal: ctrl.signal,
     }).finally(() => clearTimeout(timer));
     const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-    if (res.ok && json.ok) return { ok: true, via: "agent" };
+    if (res.ok && json.ok) {
+      // UVNC often clobbers NetLimiter rules. Auto-restore the last-known
+      // tier by pinging the client agent 4s after we launch the viewer.
+      scheduleNetLimiterReapply(m.host, machine);
+      return { ok: true, via: "agent" };
+    }
     if (json?.error) return { ok: false, error: json.error };
   } catch {
     /* agent unreachable — fall back below */
@@ -136,4 +141,28 @@ export async function launchVnc(cfg: VncConfig, machine: string): Promise<
   // Fallback: download the .bat as before.
   downloadVncBat(cfg, machine);
   return { ok: true, via: "bat" };
+}
+
+/** After UVNC launches we wait a moment, then ask the client-side agent to
+ * re-enable whichever NetLimiter tier the dashboard remembers for that VIP.
+ * Silent — logs to console, never blocks the UI. */
+function scheduleNetLimiterReapply(host: string, machine: string) {
+  setTimeout(() => {
+    try {
+      const raw = localStorage.getItem("exir.qos.state.v1");
+      const states = raw ? (JSON.parse(raw) as Record<string, { enabled?: boolean; tier?: string }>) : {};
+      const st = states[machine];
+      const tier = st?.enabled ? st.tier : null;
+      void fetch("http://localhost:8765/netlimiter/reapply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ host, tier }),
+      })
+        .then((r) => r.json().catch(() => ({})))
+        .then((j) => console.info(`[QoS reapply ${machine}]`, j))
+        .catch((e) => console.warn(`[QoS reapply ${machine}] failed`, e));
+    } catch (e) {
+      console.warn("scheduleNetLimiterReapply", e);
+    }
+  }, 4000);
 }
