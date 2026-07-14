@@ -1,25 +1,31 @@
-# Exir Client Agent — installer (run once per VIP as Administrator).
+﻿# Exir Client Agent - installer (run once per VIP as Administrator).
 #
 # Creates a Scheduled Task that starts the Node.js agent at user logon and
-# keeps it running in the user's interactive session — that's what lets the
+# keeps it running in the user's interactive session - that's what lets the
 # message popup actually appear on the player's screen (a service running in
 # session 0 wouldn't be visible).
 #
 # Requirements on the client PC:
 #   - Node.js 18+ installed and on PATH (nodejs.org LTS installer is fine)
-#   - This folder copied to C:\ExirClientAgent\
+#   - This folder copied to C:\ExirClientAgent\ (including run-agent.ps1)
 #
 # Usage:
-#   Right-click install-service.ps1 → Run with PowerShell (as Admin)
+#   Right-click install-service.ps1 -> Run with PowerShell (as Admin)
 
 $ErrorActionPreference = "Stop"
 
-$AgentDir  = "C:\ExirClientAgent"
-$AgentFile = Join-Path $AgentDir "exir-client-agent.mjs"
-$TaskName  = "ExirClientAgent"
+$AgentDir   = "C:\ExirClientAgent"
+$AgentFile  = Join-Path $AgentDir "exir-client-agent.mjs"
+$RunnerFile = Join-Path $AgentDir "run-agent.ps1"
+$TaskName   = "ExirClientAgent"
 
 if (-not (Test-Path $AgentFile)) {
-    Write-Error "Missing $AgentFile — copy the Files\exir-client-agent folder to $AgentDir first."
+    Write-Error "Missing $AgentFile - copy the Files\exir-client-agent folder to $AgentDir first."
+    exit 1
+}
+
+if (-not (Test-Path $RunnerFile)) {
+    Write-Error "Missing $RunnerFile - copy run-agent.ps1 into $AgentDir first."
     exit 1
 }
 
@@ -32,19 +38,29 @@ if (-not $node) {
 Write-Host "Node.js: $node"
 
 # Punch a firewall hole for port 8766 (LAN only)
-Write-Host "Opening firewall port 8766 (LAN)…"
+Write-Host "Opening firewall port 8766 (LAN)..."
 New-NetFirewallRule -DisplayName "Exir Client Agent (8766)" `
     -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8766 `
     -Profile Any -ErrorAction SilentlyContinue | Out-Null
 
 # Remove existing task if present
-schtasks /Delete /TN $TaskName /F 2>$null | Out-Null
+Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
 
-# Create scheduled task: run at logon of any user, run whether user is logged
-# on or not is deliberately NOT used — we want the interactive session.
-$action  = New-ScheduledTaskAction -Execute $node -Argument "`"$AgentFile`""
-$trigger = New-ScheduledTaskTrigger -AtLogOn
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+# Create scheduled task: run at logon of any user. "Run whether user is
+# logged on or not" is deliberately NOT used - we want the interactive
+# session so popups are visible.
+#
+# The agent itself is launched through a hidden PowerShell wrapper
+# (run-agent.ps1) instead of calling node.exe directly. This keeps no
+# console window visible, and because the wrapper waits on node and
+# forwards its exit code, Task Scheduler correctly sees a crash as a
+# task failure and applies the RestartCount/RestartInterval below.
+Unblock-File -Path $RunnerFile -ErrorAction SilentlyContinue
+$action    = New-ScheduledTaskAction -Execute "powershell.exe" `
+    -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$RunnerFile`""
+$trigger   = New-ScheduledTaskTrigger -AtLogOn
+$settings  = New-ScheduledTaskSettingsSet `
+    -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
     -StartWhenAvailable -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) `
     -ExecutionTimeLimit (New-TimeSpan -Days 365)
 $principal = New-ScheduledTaskPrincipal -GroupId "S-1-5-32-545" -RunLevel Highest  # BUILTIN\Users
@@ -54,7 +70,7 @@ Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger `
 
 Write-Host ""
 Write-Host "Installed scheduled task: $TaskName"
-Write-Host "Starting agent now…"
+Write-Host "Starting agent now..."
 Start-ScheduledTask -TaskName $TaskName
 Start-Sleep -Seconds 2
 
