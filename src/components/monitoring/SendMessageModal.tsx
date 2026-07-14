@@ -115,7 +115,15 @@ export function SendMessageModal({ machine, onClose }: Props) {
     });
     setBusy(false);
     setMsgOk(!!r.ok);
-    setMsg(r.ok ? `پیام ارسال شد${r.note ? ` (${r.note})` : ""}` : `ارسال ناموفق: ${r.error || "؟"}`);
+    if (r.ok) {
+      setMsg(`پیام ارسال شد${r.note ? ` (${r.note})` : ""}`);
+    } else {
+      const err = r.error || "؟";
+      const hint = /agent unreachable|Failed to fetch/i.test(err)
+        ? " — مطمئن شو ping-agent روی سرور بازه و اگر روی کلاینت هم exir-client-agent نصب کردی، ری‌استارت کن (Files/exir-client-agent/README.txt)."
+        : "";
+      setMsg(`ارسال ناموفق: ${err}${hint}`);
+    }
   }
 
   return (
