@@ -195,6 +195,26 @@ const server = createServer((req, res) => {
     return;
   }
 
+  // ── NetLimiter re-apply (after UVNC / SmartLaunch clobbers rules) ────
+  // Just forwards to the client-side exir-client-agent on :8766.
+  if (req.method === "POST" && req.url === "/netlimiter/reapply") {
+    let body = "";
+    req.on("data", (c) => { body += c; if (body.length > 4_000) req.destroy(); });
+    req.on("end", async () => {
+      try {
+        const { host, tier } = JSON.parse(body || "{}");
+        if (!host) throw new Error("host required");
+        const r = await tryClientAgent(host, "/netlimiter/apply", { tier }, 4000);
+        res.writeHead(200, { ...CORS, "Content-Type": "application/json" });
+        res.end(JSON.stringify(r));
+      } catch (e) {
+        res.writeHead(200, { ...CORS, "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: false, error: String(e?.message || e) }));
+      }
+    });
+    return;
+  }
+
   // ── Power control (WoL / Shutdown / Restart / Logoff) ────────────────
   if (req.method === "POST" && req.url === "/power") {
     let body = "";
