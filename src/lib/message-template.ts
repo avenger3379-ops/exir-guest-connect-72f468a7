@@ -152,6 +152,16 @@ export function buildMessageHtml(opts: BuildMessageOptions): string {
     '<html lang="fa" dir="rtl">\n' +
     "<head>\n" +
     '<meta charset="utf-8" />\n' +
+    // CRITICAL: mshta.exe (the host that actually opens this file on the
+    // client PC) defaults to a legacy IE7 rendering mode. In that mode,
+    // gradients/rgba backgrounds, border-radius, box-shadow, flexbox and
+    // the HTML5 <audio> element are all silently ignored — which is why,
+    // without this line, the popup used to show up as a plain white,
+    // square, unrounded box regardless of the chosen theme, and the
+    // notification sound never played. This meta tag forces mshta to use
+    // the real IE11/Trident engine, where all of the above work normally.
+    // Modern browsers (the live preview iframe) simply ignore this tag.
+    '<meta http-equiv="X-UA-Compatible" content="IE=11" />\n' +
     // hta:application is ignored (empty, no children) by real browsers; it
     // only takes effect when this file is saved as .hta and opened by
     // mshta.exe on the client PC.

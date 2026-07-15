@@ -39,6 +39,43 @@ export function disableProxy(machine: string) {
   return postClient(machine, "/net/disable-proxy");
 }
 
+export interface LiveIpInfo {
+  ok: boolean;
+  ip: string;
+  mask: string;
+  gateway: string;
+  dns1: string;
+  dns2: string;
+  error?: string;
+}
+
+/** Reads the client's actual, currently-configured IPv4 settings straight
+ * from the OS (via exir-client-agent's `/net/info`). Anything the client
+ * doesn't have set comes back as "" — callers should render that as an
+ * empty field, not fall back to a guessed/placeholder value. */
+export async function getLiveIpInfo(machine: string, timeoutMs = 8000): Promise<LiveIpInfo> {
+  const cfg = loadVncConfig();
+  const m = getMachine(cfg, machine);
+  if (!m) return { ok: false, ip: "", mask: "", gateway: "", dns1: "", dns2: "", error: `unknown machine ${machine}` };
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    const r = await fetch(`http://${m.host}:8766/net/info`, { signal: ctrl.signal }).finally(() => clearTimeout(t));
+    const j = (await r.json().catch(() => ({}))) as Partial<LiveIpInfo>;
+    return {
+      ok: !!j.ok,
+      ip: j.ip || "",
+      mask: j.mask || "",
+      gateway: j.gateway || "",
+      dns1: j.dns1 || "",
+      dns2: j.dns2 || "",
+      error: j.error,
+    };
+  } catch (e) {
+    return { ok: false, ip: "", mask: "", gateway: "", dns1: "", dns2: "", error: `client-agent unreachable: ${(e as Error).message}` };
+  }
+}
+
 export interface IpSettings {
   ip: string;
   mask: string;

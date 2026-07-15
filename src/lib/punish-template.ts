@@ -60,6 +60,10 @@ export function buildPunishHtml(opts: BuildPunishOptions): string {
     '<html lang="fa" dir="rtl">\n' +
     "<head>\n" +
     '<meta charset="utf-8" />\n' +
+    // See message-template.ts for why this line matters: without it, mshta
+    // renders in a legacy IE7 mode where gradients, rounded corners,
+    // shadows, flex layout and the HTML5 <audio> element are all ignored.
+    '<meta http-equiv="X-UA-Compatible" content="IE=11" />\n' +
     '<hta:application id="pnPunish" applicationname="ExirGamenetPunish" border="none" ' +
     'caption="no" icon="" maximizebutton="no" minimizebutton="no" showintaskbar="no" ' +
     'singleinstance="yes" sysmenu="no" windowstate="maximize" scroll="no" navigable="no" ' +
