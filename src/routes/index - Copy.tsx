@@ -29,21 +29,7 @@ import { EpicCdnDiscovery } from "@/components/monitoring/EpicCdnDiscovery";
 import { loadReservations, remainingMinutes, defaultSeats } from "@/lib/reservations";
 import { loadLogo } from "@/lib/branding";
 
-// --- نمایش/مخفی‌کردن بخش‌های صفحه ---
-// هر کدوم رو false کنی، اون بخش کلاً رندر نمی‌شه.
-const SHOW_SERVER_CARD = true;
-const SHOW_VNC_QUICK_LAUNCH = false;
-const SHOW_QOS_LAUNCH = true;
-const SHOW_CLIENTS_GRID = true;
-const SHOW_CACHE_ACTIVITY = true;
-const SHOW_PING = true;
-const SHOW_EPIC_CDN_DISCOVERY = true;
-const SHOW_STEAM_EPIC_STATUS = true;
-const SHOW_GAME_PLATFORMS = true;
-const SHOW_RESERVATION_BOARD = true;
-const SHOW_DAILY_REPORT = true;
-
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/index - Copy")({
   head: () => ({
     meta: [
       { title: "Exir Gamenet Monitoring" },
@@ -277,95 +263,72 @@ function Dashboard() {
 
         {/* Server */}
         <section className="mb-5">
-          {SHOW_SERVER_CARD && server && <ServerCard server={{ ...server, uptime }} />}
+          {server && <ServerCard server={{ ...server, uptime }} />}
         </section>
 
         {/* Clients grid */}
         <section className="mb-5">
-          {SHOW_VNC_QUICK_LAUNCH && (
-            <VncQuickLaunch
-              total={12}
-              onlineMachines={new Set(clients.filter((c) => c.online !== false).map((c) => c.machine))}
-            />
-          )}
-          {SHOW_QOS_LAUNCH && (
-            <QosLaunch machines={Array.from({ length: 12 }, (_, i) => `VIP${String(i + 1).padStart(2, "0")}`)} />
-          )}
-          {SHOW_CLIENTS_GRID && (
-            <>
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">client stations · 12</h3>
-                <span className="font-mono text-[10px] text-muted-foreground">click a card for details</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-                {clients.map((c) => (
-                  <ClientCard key={c.machine} client={c} onClick={() => setSelected(c)} />
-                ))}
-              </div>
-            </>
-          )}
+          <VncQuickLaunch
+            total={12}
+            onlineMachines={new Set(clients.filter((c) => c.online !== false).map((c) => c.machine))}
+          />
+          <QosLaunch machines={Array.from({ length: 12 }, (_, i) => `VIP${String(i + 1).padStart(2, "0")}`)} />
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">client stations · 12</h3>
+            <span className="font-mono text-[10px] text-muted-foreground">click a card for details</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+            {clients.map((c) => (
+              <ClientCard key={c.machine} client={c} onClick={() => setSelected(c)} />
+            ))}
+          </div>
         </section>
-		
-        {/* Ping */}
-        {SHOW_PING && (
-          <section>
-            <PingPanel
-              targets={pings}
-              onEdit={(i, next) => {
-                setPings((prev) => {
-                  const updated = prev.map((t, idx) =>
-                    idx === i ? { ...t, label: next.label, host: next.host, history: [] } : t,
-                  );
-                  saveTargets(updated);
-                  return updated;
-                });
-              }}
-            />
-          </section>
-        )}
-
-        {/* Epic CDN Discovery — above launcher status */}
-        {SHOW_EPIC_CDN_DISCOVERY && (
-          <section className="mt-5">
-            <EpicCdnDiscovery />
-          </section>
-        )}
 
         {/* Cache Activity (LanCache) — above network/ping */}
-        {SHOW_CACHE_ACTIVITY && (
-          <section className="mt-3">
-            <CacheActivityPanel />
-          </section>
-        )}
+        <section className="mt-3">
+          <CacheActivityPanel />
+        </section>
 
+        {/* Ping */}
+        <section>
+          <PingPanel
+            targets={pings}
+            onEdit={(i, next) => {
+              setPings((prev) => {
+                const updated = prev.map((t, idx) =>
+                  idx === i ? { ...t, label: next.label, host: next.host, history: [] } : t,
+                );
+                saveTargets(updated);
+                return updated;
+              });
+            }}
+          />
+        </section>
+
+        {/* Epic CDN Discovery — above launcher status */}
+        <section className="mt-5">
+          <EpicCdnDiscovery />
+        </section>
 
         {/* Steam & Epic platform status */}
-        {SHOW_STEAM_EPIC_STATUS && (
-          <section className="mt-3">
-            <SteamEpicStatus />
-          </section>
-        )}
+        <section className="mt-3">
+          <SteamEpicStatus />
+        </section>
 
         {/* Game platforms + latency */}
-        {SHOW_GAME_PLATFORMS && (
-          <section className="mt-3">
-            <GamePlatformsPanel />
-          </section>
-        )}
+        <section className="mt-3">
+          <GamePlatformsPanel />
+        </section>
 
         {/* Seat reservation */}
-        {SHOW_RESERVATION_BOARD && (
-          <section className="mt-3">
-            <ReservationBoard />
-          </section>
-        )}
+        <section className="mt-3">
+          <ReservationBoard />
+        </section>
 
         {/* Daily report */}
-        {SHOW_DAILY_REPORT && (
-          <section className="mt-3">
-            <DailyReport />
-          </section>
-        )}
+        <section className="mt-3">
+          <DailyReport />
+        </section>
 
 
         <footer className="mt-6 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/60">
