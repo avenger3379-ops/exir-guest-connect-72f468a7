@@ -96,30 +96,53 @@ export async function postHtmlToClient(
   const cfg = loadVncConfig();
   const m = getMachine(cfg, machine);
   if (!m) return { ok: false, error: `Unknown machine ${machine}` };
-  const creds = loadPowerCreds();
-  if (!creds.user || !creds.pass) {
-    return { ok: false, error: "admin user/pass needed — set them in Power Control first" };
+
+  // ── PREFERRED: talk directly to the exir-client-agent on the VIP itself.
+  // Same LAN, no PsExec, no SmartLaunch/UVNC/NetLimiter SMB conflicts.
+  // If it answers, we're done. curl http://<host>:8766/health from any PC
+  // on the LAN should return 200 when the agent is installed.
+  let directErr = "";
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch(`http://${m.host}:8766/message`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ html }),
+      signal: ctrl.signal,
+    }).finally(() => clearTimeout(t));
+    if (r.ok) {
+      const j = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string; note?: string };
+      if (j.ok) return { ok: true, note: j.note || `client-agent → ${m.host}` };
+      directErr = j.error || `HTTP ${r.status}`;
+    } else {
+      directErr = `HTTP ${r.status}`;
+    }
+  } catch (e) {
+    directErr = (e as Error).message;
   }
 
+  // ── FALLBACK: legacy path through the operator-side ping-agent (PsExec).
+  const creds = loadPowerCreds();
+  if (!creds.user || !creds.pass) {
+    return {
+      ok: false,
+      error: `client-agent روی ${m.host}:8766 پاسخ نداد (${directErr}) و admin user/pass برای fallback هم ست نشده — یا exir-client-agent را روی کلاینت ری‌استارت کن، یا در Power Control یوزر/پس ادمین وارد کن`,
+    };
+  }
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 60000);
     const r = await fetch("http://localhost:8765/message", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        machine,
-        host: m.host,
-        user: creds.user,
-        pass: creds.pass,
-        html,
-      }),
+      body: JSON.stringify({ machine, host: m.host, user: creds.user, pass: creds.pass, html }),
       signal: ctrl.signal,
     }).finally(() => clearTimeout(t));
     const json = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string; note?: string };
     return { ok: !!json.ok, error: json.error, note: json.note };
   } catch (e) {
-    return { ok: false, error: `agent unreachable: ${(e as Error).message}` };
+    return { ok: false, error: `agent unreachable (direct: ${directErr}; fallback: ${(e as Error).message})` };
   }
 }
 
