@@ -239,6 +239,22 @@ const server = createServer(async (req, res) => {
       return json(res, 200, r);
     }
 
+    // ── Phase 6 network tools ──────────────────────────────────────────
+    if (req.method === "POST" && req.url === "/net/flush-dns") {
+      return json(res, 200, await flushDns());
+    }
+    if (req.method === "POST" && req.url === "/net/disable-proxy") {
+      return json(res, 200, await disableProxy());
+    }
+    if (req.method === "POST" && req.url === "/net/set-ip") {
+      const body = await readBody(req);
+      const p = JSON.parse(body || "{}");
+      if (!p.ip || !p.mask || !p.gateway || !p.dns1) {
+        return json(res, 400, { ok: false, error: "ip, mask, gateway, dns1 required" });
+      }
+      return json(res, 200, await setIp(p));
+    }
+
     json(res, 404, { ok: false, error: "not found" });
   } catch (e) {
     json(res, 500, { ok: false, error: String(e?.message || e) });
