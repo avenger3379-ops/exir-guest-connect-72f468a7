@@ -132,6 +132,7 @@ export function ClientDetailModal({ client, onClose }: Props) {
               </button>
             </div>
             <LanCacheBox cache={cache} ip={ipFromMachine(client.machine)} />
+            <NetworkPanel machine={client.machine} />
             <GoodSyncPanel machine={client.machine} />
             <PowerControls machine={client.machine} />
           </>
