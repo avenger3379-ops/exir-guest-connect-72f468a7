@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Settings } from "lucide-react";
 import bgImage from "@/assets/bg-gaming.jpg";
 import { generateMockClients, generateMockServer } from "@/lib/monitoring-mock";
@@ -29,6 +29,8 @@ import { EpicCdnDiscovery } from "@/components/monitoring/EpicCdnDiscovery";
 import { ClientPingProbe } from "@/components/monitoring/ClientPingProbe";
 import { loadReservations, remainingMinutes, defaultSeats } from "@/lib/reservations";
 import { loadLogo } from "@/lib/branding";
+import { recordTick as recordProcessTick } from "@/lib/process-history";
+import { isComposing } from "@/lib/compose-lock";
 
 // --- نمایش/مخفی‌کردن بخش‌های صفحه ---
 // هر کدوم رو false کنی، اون بخش کلاً رندر نمی‌شه.
@@ -61,6 +63,7 @@ function Dashboard() {
   const [clients, setClients] = useState<ClientStatus[]>([]);
   const [pings, setPings] = useState<PingTarget[]>(() => loadTargets());
   const [selected, setSelected] = useState<ClientStatus | null>(null);
+  const closeDetail = useCallback(() => setSelected(null), []);
   // Uptime counts up from the moment the dashboard was opened.
   const startRef = useRef<number>(Date.now());
   const [uptime, setUptime] = useState("00:00:00");
@@ -98,6 +101,7 @@ function Dashboard() {
   useEffect(() => {
     let cancelled = false;
     async function tick() {
+      if (isComposing()) return;
       if (mode === "live" && dirRef.current) {
         try {
           const [c, s] = await Promise.all([
@@ -106,14 +110,17 @@ function Dashboard() {
           ]);
           if (cancelled) return;
           setClients(c);
+          recordProcessTick(c);
           if (s) setServer(s);
           setLastError(null);
         } catch (e) {
           setLastError(e instanceof Error ? e.message : "read failed");
         }
       } else {
+        const mockClients = generateMockClients();
         setServer(generateMockServer());
-        setClients(generateMockClients());
+        setClients(mockClients);
+        recordProcessTick(mockClients);
       }
     }
     tick();
@@ -128,6 +135,7 @@ function Dashboard() {
   useEffect(() => {
     let cancelled = false;
     async function tick() {
+      if (isComposing()) return;
       const current = pingsRef.current;
       const results = await pingAll(current.map((t) => t.host));
       if (cancelled) return;
@@ -147,6 +155,7 @@ function Dashboard() {
   // SSR hydration mismatch.
   useEffect(() => {
     const tick = () => {
+      if (isComposing()) return;
       const s = Math.floor((Date.now() - startRef.current) / 1000);
       const h = String(Math.floor(s / 3600)).padStart(2, "0");
       const m = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
@@ -211,7 +220,10 @@ function Dashboard() {
     recount();
     window.addEventListener("exir:reservations", recount);
     window.addEventListener("storage", recount);
-    const id = setInterval(recount, 30_000);
+    const id = setInterval(() => {
+      if (isComposing()) return;
+      recount();
+    }, 30_000);
     return () => {
       window.removeEventListener("exir:reservations", recount);
       window.removeEventListener("storage", recount);
@@ -378,7 +390,7 @@ function Dashboard() {
       </div>
 
       <ClientPingProbe clients={clients} />
-      <ClientDetailModal client={selected} onClose={() => setSelected(null)} />
+      <ClientDetailModal client={selected} onClose={closeDetail} />
     </div>
   );
 }
