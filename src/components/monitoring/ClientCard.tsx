@@ -400,22 +400,42 @@ export function ClientCard({ client, onClick }: Props) {
             <Stat label="FPS" value={client.fps.toFixed(0)} accent="magenta" />
           </div>
 
-          {/* Cache status pill */}
+          {/* Live ping pill — replaces the old IDLE cache pill.
+              Left: LAN ping (blinks red if a spike happened in the last ~20s).
+              Right: game name + game-server ping (only if a game is detected). */}
           <div
-            className="relative mt-2 flex items-center justify-between rounded-md border px-2 py-1 font-mono text-[9px] uppercase tracking-widest"
-            style={{ borderColor: `${cacheColor}55`, background: `${cacheColor}0d` }}
+            className={`relative mt-2 flex items-center justify-between rounded-md border px-2 py-1 font-mono text-[10px] uppercase tracking-widest ${shouldBlink ? "animate-pulse" : ""}`}
+            style={{
+              borderColor: `${lanColor}55`,
+              background: `${lanColor}0d`,
+              boxShadow: shouldBlink ? `0 0 10px ${lanColor}88` : undefined,
+            }}
+            title={ping ? `LAN ${ping.ip}${ping.gameHost ? ` · game host ${ping.gameHost}` : ""}` : ""}
           >
-            <span className="flex items-center gap-1" style={{ color: cacheColor }}>
+            <span className="flex items-center gap-1" style={{ color: lanColor }}>
+              <Wifi size={10} />
+              <span className="font-bold">
+                {lanMs === null ? "…" : lanLoss ? "LOSS" : `${lanMs}ms`}
+              </span>
               <span
-                className="size-1.5 rounded-full"
-                style={{ background: cacheColor, boxShadow: `0 0 5px ${cacheColor}` }}
+                className="ml-1 inline-block size-1.5 rounded-full"
+                style={{ background: cacheColor, boxShadow: `0 0 4px ${cacheColor}` }}
+                title={cache ? `cache ${cache.mode} · ${cache.speedKBs} KB/s` : "cache idle"}
               />
-              {cacheLabel}
             </span>
-            <span className="text-muted-foreground">
-              {cache ? `${cache.speedKBs} KB/s · ${cache.lastService.slice(0, 8)}` : "—"}
+            <span className="flex items-center gap-1" style={{ color: gameColor }}>
+              {ping?.gameName ? (
+                <>
+                  <span className="text-muted-foreground">▸</span>
+                  <span className="font-bold">{ping.gameName}</span>
+                  <span>{gameMs === null ? "" : gameMs < 0 ? "×" : `${gameMs}ms`}</span>
+                </>
+              ) : (
+                <span className="text-muted-foreground">— idle</span>
+              )}
             </span>
           </div>
+
 
           {/* Process pill + punish trigger (warning icon sits to its left) */}
           <div className="relative mt-2 flex items-center justify-center gap-1.5">
