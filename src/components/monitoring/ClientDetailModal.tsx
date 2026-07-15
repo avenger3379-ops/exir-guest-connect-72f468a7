@@ -9,6 +9,7 @@ import { loadSettings, type GaugeSettings } from "@/lib/gauge-settings";
 import { ipFromMachine, type ClientCache } from "@/lib/cache-activity";
 import { CACHE_EVT } from "./CacheActivityPanel";
 import { SendMessageModal } from "./SendMessageModal";
+import { NetworkPanel } from "./NetworkPanel";
 
 interface Props {
   client: ClientStatus | null;
