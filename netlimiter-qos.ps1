@@ -32,6 +32,16 @@ function Emit-Result($obj) {
     $obj | ConvertTo-Json -Compress | Write-Output
 }
 
+# NetLimiter از optimistic concurrency استفاده می‌کنه — هر Rule یک "revision"
+# داره و اگه بین خوندن Rule و صدا زدن UpdateRule یه پروسه‌ی دیگه (مثلاً یه
+# فراخوانی هم‌زمان دیگه از همین اسکریپت، یا reapply خودکار بعد از UVNC که
+# با یه کلیک دستی هم‌زمان شده) همون Rule رو عوض کرده باشه، خطای
+# "There is already newer revision of the rule ..." می‌گیریم. این خطا
+# transient‌ه: صرفاً باید Rule رو تازه بخونیم و دوباره تلاش کنیم.
+function Test-RevisionConflict([string]$msg) {
+    return $msg -match "newer revision"
+}
+
 try {
     if ($Tier -ne "UNL" -and $Bytes -le 0) {
         throw "Bytes باید برای هر تیر غیر از UNL یک مقدار مثبت باشه (پارامتر -Bytes رو چک کن)"
@@ -55,49 +65,67 @@ try {
 
     Add-Type -Path $dllPath
 
-    $svc = New-Object "NetLimiter.Service.NLClient"
-    $svc.Connect()
+    $maxAttempts = 4
+    $lastErr = $null
 
-    if (-not $svc.IsLimiterEnabled) {
-        $svc.IsLimiterEnabled = $true
-    }
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        try {
+            # هر تلاش یک Connect تازه می‌زنه تا آخرین revision رولها رو ببینه —
+            # این خودش کافیه که تداخل transient رفع بشه.
+            $svc = New-Object "NetLimiter.Service.NLClient"
+            $svc.Connect()
 
-    $zone = $svc.GetInternetZone()
+            if (-not $svc.IsLimiterEnabled) {
+                $svc.IsLimiterEnabled = $true
+            }
 
-    $rule = $null
-    foreach ($r in $svc.Rules) {
-        if ($r -is [NetLimiter.Service.LimitRule] -and
-            $r.FilterId -eq $zone.Id -and
-            $r.Dir -eq [NetLimiter.Service.RuleDir]::In) {
-            $rule = $r
-            break
+            $zone = $svc.GetInternetZone()
+
+            $rule = $null
+            foreach ($r in $svc.Rules) {
+                if ($r -is [NetLimiter.Service.LimitRule] -and
+                    $r.FilterId -eq $zone.Id -and
+                    $r.Dir -eq [NetLimiter.Service.RuleDir]::In) {
+                    $rule = $r
+                    break
+                }
+            }
+
+            if ($Tier -eq "UNL") {
+                if ($rule) {
+                    $rule.IsEnabled = $false
+                    $svc.UpdateRule($rule)
+                }
+                Emit-Result @{ ok = $true; tier = $Tier; limit = "unlimited" }
+                exit 0
+            }
+
+            if ($rule) {
+                $rule.LimitSize = [uint32]$Bytes
+                $rule.IsEnabled = $true
+                $svc.UpdateRule($rule)
+            } else {
+                $newRule = New-Object NetLimiter.Service.LimitRule
+                $newRule.FilterId = $zone.Id
+                $newRule.Dir = [NetLimiter.Service.RuleDir]::In
+                $newRule.LimitSize = [uint32]$Bytes
+                $newRule.IsEnabled = $true
+                $svc.AddRule($newRule)
+            }
+
+            Emit-Result @{ ok = $true; tier = $Tier; limitBytesPerSec = $Bytes }
+            exit 0
+
+        } catch {
+            $lastErr = $_
+            if ((Test-RevisionConflict $_.Exception.Message) -and $attempt -lt $maxAttempts) {
+                Write-Err "attempt $attempt/$maxAttempts hit a revision conflict, retrying: $($_.Exception.Message)"
+                Start-Sleep -Milliseconds (150 * $attempt)
+                continue
+            }
+            throw $lastErr
         }
     }
-
-    if ($Tier -eq "UNL") {
-        if ($rule) {
-            $rule.IsEnabled = $false
-            $svc.UpdateRule($rule)
-        }
-        Emit-Result @{ ok = $true; tier = $Tier; limit = "unlimited" }
-        exit 0
-    }
-
-    if ($rule) {
-        $rule.LimitSize = [uint32]$Bytes
-        $rule.IsEnabled = $true
-        $svc.UpdateRule($rule)
-    } else {
-        $newRule = New-Object NetLimiter.Service.LimitRule
-        $newRule.FilterId = $zone.Id
-        $newRule.Dir = [NetLimiter.Service.RuleDir]::In
-        $newRule.LimitSize = [uint32]$Bytes
-        $newRule.IsEnabled = $true
-        $svc.AddRule($newRule)
-    }
-
-    Emit-Result @{ ok = $true; tier = $Tier; limitBytesPerSec = $Bytes }
-    exit 0
 
 } catch {
     Write-Err $_.Exception.ToString()

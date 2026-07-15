@@ -195,28 +195,6 @@ const server = createServer((req, res) => {
     return;
   }
 
-  // ── NetLimiter re-apply (after UVNC / SmartLaunch clobbers rules) ────
-  // Just forwards to the client-side exir-client-agent on :8766.
-  if (req.method === "POST" && req.url === "/netlimiter/reapply") {
-    let body = "";
-    req.on("data", (c) => { body += c; if (body.length > 4_000) req.destroy(); });
-    req.on("end", async () => {
-      try {
-        const { host, tier } = JSON.parse(body || "{}");
-        if (!host) throw new Error("host required");
-        const activeTier = tier && tier !== "off" ? tier : "UNL";
-        const bytesArg = activeTier !== "UNL" ? Math.round(NL_TIER_BPS[activeTier] || 0) : 0;
-        const r = await tryClientAgent(host, "/netlimiter/apply", { tier: activeTier, bytes: bytesArg }, 4000);
-        res.writeHead(200, { ...CORS, "Content-Type": "application/json" });
-        res.end(JSON.stringify(r));
-      } catch (e) {
-        res.writeHead(200, { ...CORS, "Content-Type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: String(e?.message || e) }));
-      }
-    });
-    return;
-  }
-
   // ── Power control (WoL / Shutdown / Restart / Logoff) ────────────────
   if (req.method === "POST" && req.url === "/power") {
     let body = "";
@@ -238,23 +216,13 @@ const server = createServer((req, res) => {
     return;
   }
 
-  // ── Punishment button (targeted per-VIP warning) ──────────────────────
-  // Talks to the already-running WarningServer.exe's HTTP command port
-  // (8791) and tells it to warn exactly one machine — not a broadcast.
-  // If the server isn't up yet, launches it first (own console window,
-  // since it still supports manual/all-clients use from there too) and
-  // retries once it's had a moment to start listening.
+  // ── Punishment button (Files/warning_agent/WarningServer.exe) ────────
+  // Clicking the warning icon just launches this exe locally on the
+  // operator PC — no payload, no PsExec, nothing else involved.
   if (req.method === "POST" && req.url === "/punish") {
-    let body = "";
-    req.on("data", (c) => {
-      body += c;
-      if (body.length > 10_000) req.destroy();
-    });
-    req.on("end", () => {
-      void handlePunish(body).then((r) => {
-        res.writeHead(200, { ...CORS, "Content-Type": "application/json" });
-        res.end(JSON.stringify(r));
-      });
+    void handlePunish().then((r) => {
+      res.writeHead(200, { ...CORS, "Content-Type": "application/json" });
+      res.end(JSON.stringify(r));
     });
     return;
   }
@@ -314,8 +282,7 @@ const server = createServer((req, res) => {
     req.method === "POST" &&
     (req.url === "/goodsync/start" ||
       req.url === "/goodsync/cancel" ||
-      req.url === "/goodsync/share" ||
-      req.url === "/goodsync/open-gui")
+      req.url === "/goodsync/share")
   ) {
     let body = "";
     const url = req.url;
@@ -329,9 +296,7 @@ const server = createServer((req, res) => {
           ? handleGsStart(body)
           : url === "/goodsync/cancel"
             ? handleGsCancel(body)
-            : url === "/goodsync/open-gui"
-              ? handleGsOpenGui(body)
-              : handleGsShare(body);
+            : handleGsShare(body);
       void p
         .then((r) => {
           res.writeHead(200, { ...CORS, "Content-Type": "application/json" });
@@ -546,37 +511,11 @@ function runShutdown(args, user, pass, host, machine) {
 // the admin share, then launches it with `mshta.exe <local temp path>` on
 // the client via PsExec -i 1 (interactive session), same
 // auth-then-execute shape as runShutdown() above.
-// Try the persistent client agent (Files/exir-client-agent) first.
-// If it answers, we don't need PsExec/WMIC at all — no SmartLaunch / UVNC /
-// NetLimiter conflicts. If it's unreachable, fall through to the old path.
-async function tryClientAgent(host, path, payload, timeoutMs = 3000) {
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), timeoutMs);
-    const r = await fetch(`http://${host}:8766${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      signal: ctrl.signal,
-    }).finally(() => clearTimeout(t));
-    const j = await r.json().catch(() => ({}));
-    if (r.ok && j.ok) return { ok: true, note: j.note || `client-agent → ${host}` };
-    return { ok: false, error: j.error || `client-agent HTTP ${r.status}` };
-  } catch (e) {
-    return { ok: false, error: `client-agent unreachable: ${String(e?.message || e)}` };
-  }
-}
-
 async function handleMessage(body) {
   const { host, user, pass, html } = JSON.parse(body || "{}");
   if (!host) return { ok: false, error: "host required" };
   if (!html) return { ok: false, error: "html required" };
-
-  // PREFERRED path: client agent (no PsExec, no admin creds needed).
-  const via = await tryClientAgent(host, "/message", { html });
-  if (via.ok) return via;
-  // If the client agent isn't installed yet, keep the old fallback alive.
-  if (!IS_WIN) return { ok: false, error: `${via.error} · fallback needs Windows operator PC` };
+  if (!IS_WIN) return { ok: false, error: "requires Windows operator PC" };
 
   const fname = `exir_msg_${Date.now()}.hta`;
   const remoteUncPath = `\\\\${host}\\C$\\Windows\\Temp\\${fname}`;
@@ -662,98 +601,34 @@ async function handleMessage(body) {
 // down in this file, in the GoodSync section, so a module-top-level
 // reference here would run before that assignment and throw)
 
-const WARNING_HTTP_PORT = 8791; // WarningServer.exe's own command port
-
-// Guard against a burst of clicks re-launching a pile of server instances —
-// one launch attempt per 4s is plenty; once it's up it stays up.
+// Guard against a burst of clicks spawning a pile of instances — one
+// launch per 4s is plenty, the exe itself stays running afterwards.
 let lastPunishLaunch = 0;
 
-/** POSTs {machine, reason, seconds} to the already-running WarningServer.exe
- * so only that one connected VIP client gets the warning. */
-function postWarningCommand(machine, reason, seconds) {
-  return new Promise((resolve) => {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 3000);
-    fetch(`http://localhost:${WARNING_HTTP_PORT}/send`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ machine, reason, seconds }),
-      signal: ctrl.signal,
-    })
-      .then((r) => r.json().catch(() => ({})))
-      .then((json) => resolve({ ok: !!json.ok, error: json.error }))
-      .catch((e) => resolve({ ok: false, error: String(e?.message || e) }))
-      .finally(() => clearTimeout(t));
-  });
-}
-
-/** Launches WarningServer.exe in its own console window (same trick as
- * before — it still supports typing a manual/all-clients warning there),
- * used only as a fallback the first time nothing answers on 8791 yet. */
-function launchWarningServer(warningExe) {
-  return new Promise((resolve) => {
-    let child;
-    try {
-      // One shell string (shell:true) so cmd.exe parses it exactly as
-      // typed — an argv array here caused Node to double-quote the path.
-      child = spawn(`start "WarningServer" "${warningExe}"`, [], {
-        cwd: dirname(warningExe),
-        detached: true,
-        stdio: "ignore",
-        windowsHide: false,
-        shell: true,
-      });
-    } catch (e) {
-      return resolve({ ok: false, error: e.message });
-    }
-    child.on("error", (e) => resolve({ ok: false, error: e.message }));
-    child.unref();
-    setTimeout(() => resolve({ ok: true }), 400);
-  });
-}
-
-async function handlePunish(body) {
-  let machine, reason, seconds;
-  try {
-    ({ machine, reason, seconds } = JSON.parse(body || "{}"));
-  } catch {
-    return { ok: false, error: "bad request body" };
-  }
-  machine = String(machine || "").trim();
-  if (!machine) return { ok: false, error: "machine required" };
-  const finalReason = reason || "اخطار مدیریت";
-  const finalSeconds = Number.isFinite(Number(seconds)) ? Number(seconds) : 15;
-
-  // Try the server that should already be running (all VIP clients stay
-  // connected to it in the background).
-  let res = await postWarningCommand(machine, finalReason, finalSeconds);
-  if (res.ok) return { ok: true, note: `warning sent to ${machine}` };
-
-  // Server not reachable yet — launch it once, give it a moment to bind
-  // its ports and let clients reconnect, then retry a single time.
+async function handlePunish() {
   const warningExe = join(__dirname, "Files", "warning_agent", "WarningServer.exe");
   if (!existsSync(warningExe)) {
     return { ok: false, error: `not found: ${warningExe}` };
   }
   const now = Date.now();
-  if (now - lastPunishLaunch > 4000) {
-    lastPunishLaunch = now;
-    const launch = await launchWarningServer(warningExe);
-    if (!launch.ok) return launch;
-    await new Promise((r) => setTimeout(r, 2000));
-  } else {
-    return { ok: false, error: `${machine}: server just started — give it a couple seconds and try again` };
+  if (now - lastPunishLaunch < 4000) {
+    return { ok: true, note: "already launched moments ago — skipped duplicate" };
   }
+  lastPunishLaunch = now;
 
-  res = await postWarningCommand(machine, finalReason, finalSeconds);
-  if (res.ok) return { ok: true, note: `WarningServer started, warning sent to ${machine}` };
-  return {
-    ok: false,
-    error:
-      res.error === `${machine} is not connected`
-        ? `${machine} is not connected — is Warningclient.exe running on that PC?`
-        : res.error || `could not reach ${machine}`,
-  };
+  return await new Promise((resolve) => {
+    const child = spawn(warningExe, [], {
+      cwd: dirname(warningExe),
+      detached: true,
+      stdio: "ignore",
+      windowsHide: false,
+    });
+    child.on("error", (e) => resolve({ ok: false, error: e.message }));
+    child.unref();
+    // spawn's "error" event fires async on failure (e.g. ENOENT); a short
+    // grace period lets it surface before we report success.
+    setTimeout(() => resolve({ ok: true, note: "WarningServer.exe launched" }), 300);
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -910,18 +785,24 @@ function clearSmbSession(host) {
   });
 }
 
-// اگه پیام خطا شبیه تداخل Session/Logon باشه (یعنی SmartLaunch/UVNC هم‌زمان
-// یه Session با credential دیگه به همون هاست باز کرده)، یک بار دیگه
-// clearSmbSession + یه مکث کوتاه + تلاش مجدد می‌زنیم قبل از اینکه شکست
-// نهایی رو گزارش بدیم. این چیزی‌ه که کاربر خواسته: «خودش پاکسازی رو انجام
-// بده و بعد دستور رو بفرسته».
-function looksLikeSmbSessionConflict(err) {
-  return /access is denied|multiple connections|logon failure|error 5\b|\b1219\b|\b1385\b/i.test(
-    String(err || ""),
-  );
-}
+async function handleQosNetLimiter({ machine, enabled, tier }) {
+  const psexec = process.env.PSEXEC_PATH || "psexec.exe";
+  const scriptPath = process.env.NETLIMITER_QOS_SCRIPT || "C:\\GameNet-Monitor\\netlimiter-qos.ps1";
+  const user = process.env.CLIENT_ADMIN_USER || process.env.MIKROTIK_USER;
+  const pass = process.env.CLIENT_ADMIN_PASS || process.env.MIKROTIK_PASS;
+  const nn = String(machine || "")
+    .replace(/\D/g, "")
+    .padStart(2, "0");
+  const host = process.env.CLIENT_SUBNET
+    ? `${process.env.CLIENT_SUBNET}${nn}`
+    : `${process.env.MIKROTIK_SUBNET || "192.168.3.1"}${nn}`;
+  const machineHost = machine || `VIP${nn}`; // psexec accepts hostname too
 
-function runPsexecQos({ psexec, host, user, pass, scriptPath, activeTier, bytesArg }) {
+  await clearSmbSession(host);
+
+  const activeTier = enabled && tier !== "off" && tier ? tier : "UNL";
+  const bytesArg = activeTier !== "UNL" ? String(Math.round(NL_TIER_BPS[activeTier] || 0)) : null;
+
   const args = [
     "-accepteula",
     "-nobanner",
@@ -941,16 +822,8 @@ function runPsexecQos({ psexec, host, user, pass, scriptPath, activeTier, bytesA
     ...(bytesArg ? ["-Bytes", bytesArg] : []),
   ];
 
-  return new Promise((resolve) => {
-    // NOTE: windowsHide:true sets CREATE_NO_WINDOW, which is a known cause of
-    // PsExec's "Couldn't access <host>: The handle is invalid" error — PsExec
-    // duplicates the calling process's console/std handles to forward its
-    // "Connecting to..." progress + remote I/O, and with no console at all
-    // (CREATE_NO_WINDOW, or a parent Node process with no console of its
-    // own) that duplication fails. Explicit stdio pipes give it valid
-    // handles to duplicate regardless of whether ping-agent.mjs's own
-    // parent process has a real console.
-    execFile(psexec, args, { timeout: 20000, windowsHide: false, stdio: ["ignore", "pipe", "pipe"] }, (err, stdout, stderr) => {
+  const result = await new Promise((resolve) => {
+    execFile(psexec, args, { timeout: 20000, windowsHide: true }, (err, stdout, stderr) => {
       if (err && err.code === "ENOENT") {
         return resolve({
           ok: false,
@@ -983,103 +856,6 @@ function runPsexecQos({ psexec, host, user, pass, scriptPath, activeTier, bytesA
       });
     });
   });
-}
-
-async function handleQosNetLimiter({ machine, enabled, tier }) {
-  const nn = String(machine || "")
-    .replace(/\D/g, "")
-    .padStart(2, "0");
-  const host = process.env.CLIENT_SUBNET
-    ? `${process.env.CLIENT_SUBNET}${nn}`
-    : `${process.env.MIKROTIK_SUBNET || "192.168.3.1"}${nn}`;
-  const machineHost = machine || `VIP${nn}`;
-
-  const activeTier = enabled && tier !== "off" && tier ? tier : "UNL";
-  const bytesArg = activeTier !== "UNL" ? Math.round(NL_TIER_BPS[activeTier] || 0) : 0;
-
-  // PREFERRED path: the exir-client-agent already runs locally on the VIP
-  // (interactive session, no SMB involved at all) — see exir-client-agent.mjs.
-  // Going through it means SmartLaunch/UVNC's own SMB sessions to the same
-  // host simply can't collide with this call, because there's no SMB call
-  // here in the first place.
-  const viaAgent = await tryClientAgent(
-    host,
-    "/netlimiter/apply",
-    { tier: activeTier, bytes: bytesArg },
-    4000,
-  );
-  if (viaAgent.ok) {
-    return {
-      ok: true,
-      backend: "netlimiter",
-      machine: machineHost,
-      host,
-      tier: activeTier,
-      limit_bps: activeTier !== "UNL" ? bytesArg : "unlimited",
-      via: "client-agent",
-    };
-  }
-
-  // If the client agent actually responded (it's up, reachable, and running
-  // fine) but the apply itself failed, retry the client agent directly once
-  // more instead of routing to PsExec — netlimiter-qos.ps1 already retries
-  // transient NetLimiter revision conflicts internally, so a second attempt
-  // a moment later is far more likely to succeed than PsExec, which needs a
-  // real console handle on the *server* side to work at all and can fail
-  // with "the handle is invalid" regardless of anything on the client.
-  const agentUnreachable = /client-agent unreachable/i.test(viaAgent.error || "");
-  if (!agentUnreachable) {
-    await new Promise((r) => setTimeout(r, 400));
-    const retryAgent = await tryClientAgent(
-      host,
-      "/netlimiter/apply",
-      { tier: activeTier, bytes: bytesArg },
-      4000,
-    );
-    if (retryAgent.ok) {
-      return {
-        ok: true,
-        backend: "netlimiter",
-        machine: machineHost,
-        host,
-        tier: activeTier,
-        limit_bps: activeTier !== "UNL" ? bytesArg : "unlimited",
-        via: "client-agent (retry)",
-      };
-    }
-    return {
-      ok: false,
-      backend: "netlimiter",
-      machine: machineHost,
-      host,
-      tier: activeTier,
-      limit_bps: activeTier !== "UNL" ? bytesArg : "unlimited",
-      via: "client-agent",
-      error: retryAgent.error || viaAgent.error,
-    };
-  }
-
-  // FALLBACK path: PsExec over SMB (only reached when the client agent isn't
-  // installed/reachable at all — see Files/exir-client-agent/README.txt).
-  // Auto-cleanup: always clear any stale SMB session before the first try;
-  // if it still fails with what looks like a session/logon conflict
-  // (SmartLaunch/UVNC holding their own session open), clear again, pause
-  // briefly, and retry once more automatically before giving up.
-  const psexec = process.env.PSEXEC_PATH || "psexec.exe";
-  const scriptPath = process.env.NETLIMITER_QOS_SCRIPT || "C:\\GameNet-Monitor\\netlimiter-qos.ps1";
-  const user = process.env.CLIENT_ADMIN_USER || process.env.MIKROTIK_USER;
-  const pass = process.env.CLIENT_ADMIN_PASS || process.env.MIKROTIK_PASS;
-  const psexecArgs = { psexec, host, user, pass, scriptPath, activeTier, bytesArg: bytesArg ? String(bytesArg) : null };
-
-  await clearSmbSession(host);
-  let result = await runPsexecQos(psexecArgs);
-
-  if (!result.ok && looksLikeSmbSessionConflict(result.error)) {
-    await clearSmbSession(host);
-    await new Promise((r) => setTimeout(r, 500));
-    await clearSmbSession(host);
-    result = await runPsexecQos(psexecArgs);
-  }
 
   return {
     ok: !!result.ok,
@@ -1087,11 +863,8 @@ async function handleQosNetLimiter({ machine, enabled, tier }) {
     machine: machineHost,
     host,
     tier: activeTier,
-    limit_bps: activeTier !== "UNL" ? bytesArg : "unlimited",
-    via: "psexec",
-    ...(result.ok
-      ? {}
-      : { error: `client-agent: ${viaAgent.error} · psexec: ${result.error || "unknown error"}` }),
+    limit_bps: activeTier !== "UNL" ? Math.round(NL_TIER_BPS[activeTier] || 0) : "unlimited",
+    ...(result.ok ? {} : { error: result.error || "unknown error" }),
   };
 }
 
@@ -1156,48 +929,7 @@ function listGsJobs() {
     exitCode: j.exitCode,
     lastLine: j.lastLine,
     error: j.error,
-    percent: j.percent,
-    jobProgress: j.jobProgress,
-    fileErrors: j.fileErrors,
   }));
-}
-
-// Scrapes a 0-100 progress number out of a gsync.exe console line. GoodSync's
-// CLI prints per-file progress lines while copying (observed formats include
-// a bare "NN%" token, and "<done> of <total> files" counters); we try the
-// direct percentage first and fall back to the file-count ratio.
-function extractProgress(line) {
-  if (!line) return null;
-  const pctMatch = line.match(/(\d{1,3})\s?%/);
-  if (pctMatch) {
-    const n = Number(pctMatch[1]);
-    if (!Number.isNaN(n)) return Math.max(0, Math.min(100, n));
-  }
-  const ofMatch = line.match(/(\d+)\s*(?:of|\/)\s*(\d+)\s*files?/i);
-  if (ofMatch) {
-    const done = Number(ofMatch[1]);
-    const total = Number(ofMatch[2]);
-    if (total > 0 && !Number.isNaN(done)) return Math.max(0, Math.min(100, Math.round((done / total) * 100)));
-  }
-  return null;
-}
-
-// Flags gsync.exe console lines that indicate an individual file/job
-// failure (access denied, can't copy, locked file, etc.) so they can be
-// listed individually instead of only surfacing as one final exit code.
-function looksLikeSyncError(line) {
-  if (!line) return false;
-  return /\berror\b|\bfailed\b|\bfail\b|cannot copy|can'?t copy|access is denied|permission denied|\bdenied\b|exception|\bmissing\b|not found|locked/i.test(
-    line,
-  );
-}
-
-// Overall percent across all jobs of a game (e.g. Fortnite's 3 jobs), simple
-// average of each job's own progress so far.
-function overallPercent(rec) {
-  const vals = rec.jobs.map((j) => rec.jobProgress?.[j] ?? 0);
-  if (!vals.length) return 0;
-  return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
 }
 
 function trimHistory() {
@@ -1232,18 +964,13 @@ async function handleGsStart(body) {
     exitCode: null,
     error: undefined,
     finishedAt: undefined,
-    percent: 0,
-    jobProgress: Object.fromEntries(jobs.map((j) => [j, 0])),
-    fileErrors: [],
   };
   GS_JOBS.set(key, rec);
 
   // Run jobs sequentially so we can attribute a failure.
   (async () => {
-    let currentJob = null;
     try {
       for (const job of jobs) {
-        currentJob = job;
         rec.lastLine = `sync ${job}`;
         // gsync.exe sync <jobname> — runs synchronously, exits when done.
         const args = ["sync", job];
@@ -1257,24 +984,10 @@ async function handleGsStart(body) {
           rec.proc = proc;
           let last = "";
           const onData = (d) => {
-            const lines = d
-              .toString()
-              .split(/\r?\n/)
-              .map((l) => l.trim())
-              .filter(Boolean);
-            if (!lines.length) return;
-            for (const l of lines) {
-              if (looksLikeSyncError(l)) {
-                rec.fileErrors.push({ job, line: l.slice(0, 200), at: Date.now() });
-                if (rec.fileErrors.length > 50) rec.fileErrors.shift();
-              }
-            }
-            last = lines[lines.length - 1] || last;
-            rec.lastLine = `${job}: ${last.slice(0, 80)}`;
-            const pct = extractProgress(last);
-            if (pct !== null) {
-              rec.jobProgress[job] = pct;
-              rec.percent = overallPercent(rec);
+            const s = d.toString().trim();
+            if (s) {
+              last = s.split(/\r?\n/).pop() || last;
+              rec.lastLine = `${job}: ${last.slice(0, 80)}`;
             }
           };
           proc.stdout?.on("data", onData);
@@ -1290,23 +1003,15 @@ async function handleGsStart(body) {
         rec.proc = null;
         if (exit.err) throw new Error(exit.err);
         if (exit.code !== 0) throw new Error(`${job} exited ${exit.code}`);
-        rec.jobProgress[job] = 100;
-        rec.percent = overallPercent(rec);
       }
       rec.ok = true;
       rec.exitCode = 0;
-      rec.percent = 100;
       rec.lastLine = `✓ all ${jobs.length} job(s) done`;
     } catch (e) {
       if (!rec.cancelled) {
         rec.ok = false;
         rec.error = String(e?.message || e);
         rec.exitCode = -1;
-        rec.fileErrors.push({
-          job: currentJob || rec.game,
-          line: `job did not complete: ${rec.error}`,
-          at: Date.now(),
-        });
       }
     } finally {
       if (!rec.cancelled) {
@@ -1336,50 +1041,6 @@ async function handleGsCancel(body) {
   rec.error = "cancelled";
   rec.finishedAt = Date.now();
   return { ok: true };
-}
-
-// Launches the real GoodSync desktop app (not the silent gsync.exe CLI) so
-// the operator watches GoodSync's own progress bar / % / error log directly.
-// Confirmed syntax (GoodSync "Script/Email" docs — same executable used to
-// chain jobs from a Job's Scripts tab):
-//   GoodSync.exe job "Job Name" /sync
-// This opens/attaches to the single GoodSync GUI instance in Attended mode
-// and runs that job with the full window visible. GoodSync only ever runs
-// one GUI process — if it's already open, further "job ... /sync" calls are
-// queued into that same window instead of spawning duplicates, so for games
-// with multiple jobs (Fortnite) we just fire one call per job in sequence.
-async function handleGsOpenGui(body) {
-  const { machine, game } = JSON.parse(body || "{}");
-  if (!machine || !game) return { ok: false, error: "machine and game required" };
-  const jobs = jobsFor(machine, game);
-  if (!jobs.length) return { ok: false, error: `unknown game ${game}` };
-  if (platform() !== "win32") return { ok: false, error: "requires the GoodSync GUI on a Windows operator PC" };
-
-  const gsPath =
-    process.env.GOODSYNC_GUI_PATH ||
-    (process.env.GOODSYNC_PATH || "C:\\Program Files\\Siber Systems\\GoodSync\\gsync.exe").replace(
-      /gsync\.exe$/i,
-      "GoodSync.exe",
-    );
-
-  try {
-    for (const job of jobs) {
-      const proc = spawn(gsPath, ["job", job, "/sync"], {
-        windowsHide: false,
-        detached: true,
-        stdio: "ignore",
-      });
-      // Detached + ignored stdio: we don't track this job's progress or
-      // wait for it (that's the point — GoodSync's own window takes over).
-      // Just swallow late spawn errors (e.g. exe missing) instead of
-      // crashing the agent on an unhandled 'error' event.
-      proc.on("error", () => {});
-      proc.unref();
-    }
-    return { ok: true, jobs };
-  } catch (e) {
-    return { ok: false, error: e.code === "ENOENT" ? `GoodSync.exe not found at ${gsPath}` : String(e?.message || e) };
-  }
 }
 
 async function handleGsShare(body) {
