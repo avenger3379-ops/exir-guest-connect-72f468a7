@@ -7,6 +7,11 @@
 //   http://<client-ip>:8766/punish    → same, with kbd lock + Alt+F4 block
 //   http://<client-ip>:8766/netlimiter/apply → set/re-apply NetLimiter tier
 //                                               body: { tier, bytes }
+//   http://<client-ip>:8766/net/info  → GET, returns the client's actual
+//                                        current IPv4 config: { ok, ip, mask,
+//                                        gateway, dns1, dns2 }. Anything the
+//                                        OS doesn't report comes back as ""
+//                                        — never a guessed/placeholder value.
 //   http://<client-ip>:8766/health    → { ok:true, machine, version }
 //
 // Everything runs in the interactive user session because the agent itself
@@ -30,7 +35,7 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir, hostname } from "node:os";
 import { join } from "node:path";
 
-const VERSION = "1.1.0";
+const VERSION = "1.2.0";
 const PORT = Number(process.env.EXIR_CLIENT_PORT || 8766);
 const MACHINE = (process.env.EXIR_MACHINE_ID || hostname()).toUpperCase();
 // NOTE: nlq.exe does NOT exist in NetLimiter 4.1.13 (it was a CLI tool from
@@ -134,6 +139,77 @@ async function applyNetLimiter(tier, bytes) {
   };
 }
 
+// ── Live network info (GET /net/info) ──────────────────────────────────
+// Reads whatever the OS actually has configured on the active adapter right
+// now — IP, subnet mask, default gateway, DNS servers — and returns exactly
+// that. Any field the OS doesn't report comes back as "" (never a made-up
+// placeholder); the operator UI is expected to render those as empty boxes
+// rather than guessing.
+const NET_INFO_PS = `
+$ErrorActionPreference = 'SilentlyContinue'
+function PrefixToMask($p) {
+  if (-not $p) { return '' }
+  $bits = ('1' * [int]$p).PadRight(32, '0')
+  $bytes = for ($i = 0; $i -lt 32; $i += 8) { [Convert]::ToByte($bits.Substring($i, 8), 2) }
+  return ($bytes -join '.')
+}
+$cfg = Get-NetIPConfiguration | Where-Object {
+  $_.IPv4Address -and $_.NetAdapter.Status -eq 'Up'
+} | Sort-Object { if ($_.IPv4DefaultGateway) { 0 } else { 1 } } | Select-Object -First 1
+$ip = ''; $mask = ''; $gw = ''; $dns = @()
+if ($cfg) {
+  $ip = [string]$cfg.IPv4Address.IPAddress
+  $mask = PrefixToMask $cfg.IPv4Address.PrefixLength
+  if ($cfg.IPv4DefaultGateway) { $gw = [string]$cfg.IPv4DefaultGateway.NextHop }
+  if ($cfg.DNSServer) {
+    $dns = @($cfg.DNSServer | Where-Object { $_.AddressFamily -eq 2 } | ForEach-Object { $_.ServerAddresses } | Where-Object { $_ })
+  }
+}
+$obj = [PSCustomObject]@{
+  ok = $true
+  ip = $ip
+  mask = $mask
+  gateway = $gw
+  dns1 = if ($dns.Count -ge 1) { $dns[0] } else { '' }
+  dns2 = if ($dns.Count -ge 2) { $dns[1] } else { '' }
+}
+$obj | ConvertTo-Json -Compress
+`.trim();
+
+function readNetInfo() {
+  return new Promise((resolve) => {
+    execFile(
+      "powershell",
+      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", NET_INFO_PS],
+      { timeout: 8000, windowsHide: true },
+      (err, stdout, stderr) => {
+        const text = String(stdout || "");
+        const jsonLine = text
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .find((l) => l.startsWith("{") && l.endsWith("}"));
+        if (jsonLine) {
+          try {
+            const parsed = JSON.parse(jsonLine);
+            return resolve({
+              ok: true,
+              ip: parsed.ip || "",
+              mask: parsed.mask || "",
+              gateway: parsed.gateway || "",
+              dns1: parsed.dns1 || "",
+              dns2: parsed.dns2 || "",
+            });
+          } catch { /* fall through */ }
+        }
+        resolve({
+          ok: false,
+          error: (stderr || err?.message || "no JSON output from Get-NetIPConfiguration").toString().slice(0, 300),
+        });
+      },
+    );
+  });
+}
+
 // ── Server ──────────────────────────────────────────────────────────────
 const server = createServer(async (req, res) => {
   if (req.method === "OPTIONS") { res.writeHead(204, CORS); return res.end(); }
@@ -158,6 +234,11 @@ const server = createServer(async (req, res) => {
       const { tier, bytes } = JSON.parse(body || "{}");
       const r = await applyNetLimiter(tier, bytes);
       return json(res, 200, r);
+    }
+
+    if (req.method === "GET" && req.url === "/net/info") {
+      const r = await readNetInfo();
+      return json(res, r.ok ? 200 : 502, r);
     }
 
     json(res, 404, { ok: false, error: "not found" });
