@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { Database, Zap, Cloud } from "lucide-react";
 import type { ClientStatus } from "@/lib/monitoring-types";
 import { MetricBar } from "./MetricBar";
@@ -10,15 +10,25 @@ import { ipFromMachine, type ClientCache } from "@/lib/cache-activity";
 import { CACHE_EVT } from "./CacheActivityPanel";
 import { SendMessageModal } from "./SendMessageModal";
 import { NetworkPanel } from "./NetworkPanel";
+import { ProcessHistoryPanel } from "./ProcessHistoryPanel";
+import { isComposing } from "@/lib/compose-lock";
 
 interface Props {
   client: ClientStatus | null;
   onClose: () => void;
 }
 
-export function ClientDetailModal({ client, onClose }: Props) {
+// Wrapped in React.memo: the dashboard behind this modal polls mock/ping data
+// every 1-3s. Without memo, every one of those ticks re-renders this entire
+// modal (and the Send Message textarea inside it), which was heavy enough to
+// visibly stutter and eat keystrokes while typing a message. `client` and
+// `onClose` are stable references while the modal is open (see index.tsx),
+// so this component now only re-renders when the selected client actually
+// changes or the modal is closed.
+export const ClientDetailModal = memo(function ClientDetailModal({ client, onClose }: Props) {
   const [settings, setSettings] = useState<GaugeSettings>(() => loadSettings());
   const [showSendMessage, setShowSendMessage] = useState(false);
+  const [showProcessHistory, setShowProcessHistory] = useState(false);
   useEffect(() => {
     const h = () => setSettings(loadSettings());
     window.addEventListener("exir:gauge-settings", h);
@@ -36,12 +46,19 @@ export function ClientDetailModal({ client, onClose }: Props) {
   }, [client, onClose]);
 
   // Subscribe to LanCache activity for this client's IP.
+  // Guarded with isComposing(): CacheActivityPanel broadcasts this event
+  // every ~3s in the background. Without the guard, that kept updating
+  // `cache` state here and re-rendering this whole modal — including the
+  // Send Message form nested inside it — every few seconds while typing,
+  // which is what made the compose form feel like it kept "refreshing"
+  // and eating keystrokes/focus.
   const [cache, setCache] = useState<ClientCache | null>(null);
   useEffect(() => {
     if (!client) return;
     const ip = ipFromMachine(client.machine);
     if (!ip) return;
     const read = () => {
+      if (isComposing()) return;
       const map = (window as unknown as { __exirCache?: Record<string, ClientCache> }).__exirCache;
       setCache(map?.[ip] || null);
     };
@@ -49,6 +66,9 @@ export function ClientDetailModal({ client, onClose }: Props) {
     window.addEventListener(CACHE_EVT, read);
     return () => window.removeEventListener(CACHE_EVT, read);
   }, [client]);
+
+  const closeSendMessage = useCallback(() => setShowSendMessage(false), []);
+  const closeProcessHistory = useCallback(() => setShowProcessHistory(false), []);
 
   if (!client) return null;
 
@@ -103,7 +123,12 @@ export function ClientDetailModal({ client, onClose }: Props) {
             </div>
 
             <div className="relative mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-              <Stat label="Process" value={client.topProcess} />
+              <Stat
+                label="Process"
+                value={client.topProcess}
+                onClick={() => setShowProcessHistory(true)}
+                title="کلیک کن تا تاریخچه‌ی اجرای برنامه‌ها و مدت‌زمانشون رو ببینی"
+              />
               <Stat label="Profile" value={`P${client.profile}`} />
               <Stat label="Thermal" value={`L${client.thermalLevel}`} accent={client.thermalLevel >= 2 ? "red" : "cyan"} />
               <Stat label="Updated" value={new Date(client.timestamp).toLocaleTimeString()} />
@@ -145,24 +170,52 @@ export function ClientDetailModal({ client, onClose }: Props) {
         )}
       </div>
       {showSendMessage && (
-        <SendMessageModal machine={client.machine} onClose={() => setShowSendMessage(false)} />
+        <SendMessageModal machine={client.machine} onClose={closeSendMessage} />
+      )}
+      {showProcessHistory && (
+        <ProcessHistoryPanel machine={client.machine} onClose={closeProcessHistory} />
       )}
     </div>
   );
-}
+});
 
-function Stat({ label, value, accent = "cyan" }: { label: string; value: string; accent?: "cyan" | "red" }) {
-  return (
-    <div className="rounded-md border border-border/60 bg-surface/40 p-2.5">
-      <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div
-        className="mt-1 truncate font-mono text-sm font-semibold"
-        style={{ color: accent === "red" ? "var(--neon-red)" : "var(--neon-cyan)" }}
-      >
+function Stat({
+  label,
+  value,
+  accent = "cyan",
+  onClick,
+  title,
+}: {
+  label: string;
+  value: string;
+  accent?: "cyan" | "red";
+  onClick?: () => void;
+  title?: string;
+}) {
+  const color = accent === "red" ? "var(--neon-red)" : "var(--neon-cyan)";
+  const content = (
+    <>
+      <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <span>{label}</span>
+        {onClick && <span className="font-fa opacity-60" style={{ color }} lang="fa">▸ لاگ</span>}
+      </div>
+      <div className="mt-1 truncate font-mono text-sm font-semibold" style={{ color }}>
         {value}
       </div>
-    </div>
+    </>
   );
+  if (onClick) {
+    return (
+      <button
+        onClick={onClick}
+        title={title}
+        className="w-full rounded-md border border-border/60 bg-surface/40 p-2.5 text-left transition hover:border-cyan-500/60 hover:bg-cyan-500/[0.06]"
+      >
+        {content}
+      </button>
+    );
+  }
+  return <div className="rounded-md border border-border/60 bg-surface/40 p-2.5">{content}</div>;
 }
 
 function LanCacheBox({ cache, ip }: { cache: ClientCache | null; ip: string | null }) {

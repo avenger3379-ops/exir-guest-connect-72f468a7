@@ -8,6 +8,7 @@ import { CACHE_EVT } from "./CacheActivityPanel";
 import { CLIENT_PING_EVT, type ClientPing } from "@/lib/client-ping";
 import { sendPunish } from "@/lib/punish";
 import { launchVnc, loadVncConfig } from "@/lib/vnc-config";
+import { ProcessHistoryPanel } from "./ProcessHistoryPanel";
 
 interface Props {
   client: ClientStatus;
@@ -225,6 +226,7 @@ export function ClientCard({ client, onClick }: Props) {
   const overheat = client.gpuTemp >= 80 || client.cpuTemp >= 78;
   const brand = gpuBrand(client.gpuName);
   const brandColor = BRAND_COLOR[brand];
+  const [showProcessHistory, setShowProcessHistory] = useState(false);
 
   const [settings, setSettings] = useState<GaugeSettings>(() => loadSettings());
   useEffect(() => {
@@ -298,6 +300,7 @@ export function ClientCard({ client, onClick }: Props) {
       .trim() || client.gpuName;
 
   return (
+    <>
     <div
       role="button"
       tabIndex={0}
@@ -440,10 +443,18 @@ export function ClientCard({ client, onClick }: Props) {
           {/* Process pill + punish trigger (warning icon sits to its left) */}
           <div className="relative mt-2 flex items-center justify-center gap-1.5">
             <PunishButton machine={client.machine} />
-            <span className="rounded-full border border-border/60 bg-surface/70 px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-wider">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowProcessHistory(true);
+              }}
+              title="کلیک کن تا تاریخچه‌ی اجرای برنامه‌ها و مدت‌زمانشون رو ببینی"
+              className="rounded-full border border-border/60 bg-surface/70 px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-wider transition hover:border-cyan-500/60 hover:bg-cyan-500/[0.08]"
+            >
               <span className="text-muted-foreground">▶ </span>
               <span className="text-foreground">{client.topProcess}</span>
-            </span>
+            </button>
             <VncButton machine={client.machine} />
           </div>
         </>
@@ -457,6 +468,10 @@ export function ClientCard({ client, onClick }: Props) {
         </div>
       )}
     </div>
+    {showProcessHistory && (
+      <ProcessHistoryPanel machine={client.machine} onClose={() => setShowProcessHistory(false)} />
+    )}
+    </>
   );
 }
 

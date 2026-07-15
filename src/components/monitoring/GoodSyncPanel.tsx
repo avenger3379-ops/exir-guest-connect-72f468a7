@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   AppWindow,
@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { gsCancel, gsOpenGui, gsShare, gsStart, gsStatus, jobNamesFor, parsePercent, type GsGame, type GsJobStatus } from "@/lib/goodsync";
 import { MetricBar } from "@/components/monitoring/MetricBar";
+import { isComposing } from "@/lib/compose-lock";
 
 export function GoodSyncPanel({ machine }: { machine: string }) {
   const [open, setOpen] = useState(false);
@@ -24,6 +25,7 @@ export function GoodSyncPanel({ machine }: { machine: string }) {
     if (!open) return;
     let cancelled = false;
     const tick = async () => {
+      if (isComposing()) return;
       const r = await gsStatus();
       if (!cancelled) setJobs((r.jobs || []).filter((j) => j.machine === machine));
     };
@@ -97,7 +99,7 @@ export function GoodSyncPanel({ machine }: { machine: string }) {
               className="ml-1 flex items-center gap-1 rounded-full px-1.5 py-[1px] text-[8px] font-bold"
               style={{ background: "var(--neon-red)", color: "black" }}
             >
-              <AlertTriangle size={8} /> {recentFileErrors.length} خطا
+              <AlertTriangle size={8} /> {recentFileErrors.length} <span className="font-fa" lang="fa">خطا</span>
             </span>
           )}
         </span>
@@ -110,8 +112,8 @@ export function GoodSyncPanel({ machine }: { machine: string }) {
           <div className="mt-3 rounded-lg border p-2.5" style={{ borderColor: "oklch(0.75 0.16 195 / 0.4)", background: "oklch(0.75 0.16 195 / 0.06)" }}>
             <div className="mb-2 flex items-center gap-1.5 font-mono text-[9px] font-bold uppercase tracking-widest" style={{ color: "var(--neon-cyan)" }}>
               <LayoutDashboard size={12} />
-              آپدیت از داشبورد
-              <span className="font-normal normal-case tracking-normal text-muted-foreground">— بی‌صدا، پیشرفت همینجا نشون داده می‌شه</span>
+              <span className="font-fa normal-case" lang="fa">آپدیت از داشبورد</span>
+              <span className="font-fa font-normal normal-case tracking-normal text-muted-foreground" lang="fa">— بی‌صدا، پیشرفت همینجا نشون داده می‌شه</span>
             </div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <DashButton
@@ -147,7 +149,7 @@ export function GoodSyncPanel({ machine }: { machine: string }) {
           {/* visual gap + divider so the two groups can't be confused */}
           <div className="my-2.5 flex items-center gap-2">
             <div className="h-px flex-1 bg-border/50" />
-            <span className="font-mono text-[8px] uppercase tracking-widest text-muted-foreground/60">یا</span>
+            <span className="font-fa font-mono text-[8px] uppercase tracking-widest text-muted-foreground/60" lang="fa">یا</span>
             <div className="h-px flex-1 bg-border/50" />
           </div>
 
@@ -155,12 +157,12 @@ export function GoodSyncPanel({ machine }: { machine: string }) {
           <div className="rounded-lg border p-2.5" style={{ borderColor: "oklch(0.72 0.19 55 / 0.45)", background: "oklch(0.72 0.19 55 / 0.07)" }}>
             <div className="mb-2 flex items-center gap-1.5 font-mono text-[9px] font-bold uppercase tracking-widest" style={{ color: "var(--neon-amber)" }}>
               <AppWindow size={12} />
-              باز کردن در GoodSync
-              <span className="font-normal normal-case tracking-normal text-muted-foreground">— برنامه واقعی رو باز می‌کنه، درصد و خطاها داخل خودش</span>
+              <span className="font-fa normal-case" lang="fa">باز کردن در GoodSync</span>
+              <span className="font-fa font-normal normal-case tracking-normal text-muted-foreground" lang="fa">— برنامه واقعی رو باز می‌کنه، درصد و خطاها داخل خودش</span>
             </div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <GuiButton
-                label="Fortnite در GoodSync"
+                label={<>Fortnite <span className="font-fa" lang="fa">در</span> GoodSync</>}
                 sub={fortJobs.join(" + ")}
                 accent="var(--neon-magenta)"
                 disabled={busy !== null}
@@ -168,7 +170,7 @@ export function GoodSyncPanel({ machine }: { machine: string }) {
                 spinning={busy === "gui-fortnite"}
               />
               <GuiButton
-                label="FallGuys در GoodSync"
+                label={<>FallGuys <span className="font-fa" lang="fa">در</span> GoodSync</>}
                 sub={fallJobs.join("")}
                 accent="var(--neon-amber)"
                 disabled={busy !== null}
@@ -199,7 +201,7 @@ export function GoodSyncPanel({ machine }: { machine: string }) {
                     </div>
 
                     <div className="mt-1.5">
-                      <MetricBar label="پیشرفت کل" value={overallPct} unit="%" thresholds={{ warn: 101, crit: 101 }} />
+                      <MetricBar label={<span className="font-fa" lang="fa">پیشرفت کل</span>} value={overallPct} unit="%" thresholds={{ warn: 101, crit: 101 }} />
                     </div>
 
                     {j.jobProgress && Object.keys(j.jobProgress).length > 0 && (
@@ -219,7 +221,7 @@ export function GoodSyncPanel({ machine }: { machine: string }) {
           {recentFileErrors.length > 0 && (
             <div className="mt-3 rounded-lg border px-2.5 py-2" style={{ borderColor: "oklch(0.6 0.25 25 / 0.4)", background: "oklch(0.6 0.25 25 / 0.06)" }}>
               <div className="mb-1.5 flex items-center gap-1.5 font-mono text-[9px] font-bold uppercase tracking-widest" style={{ color: "var(--neon-red)" }}>
-                <AlertTriangle size={11} /> فایل‌ها/کارهایی که خطا دادن
+                <AlertTriangle size={11} /> <span className="font-fa normal-case" lang="fa">فایل‌ها/کارهایی که خطا دادن</span>
               </div>
               <div className="max-h-40 space-y-1 overflow-y-auto">
                 {recentFileErrors.map((fe, i) => (
@@ -247,7 +249,8 @@ export function GoodSyncPanel({ machine }: { machine: string }) {
 
           {msg && (
             <div
-              className="mt-2 rounded border px-2 py-1 font-mono text-[10px]"
+              className="font-fa mt-2 rounded border px-2 py-1 text-[10px]"
+              lang="fa"
               style={{
                 borderColor: msg.ok ? "var(--neon-green)" : "var(--neon-red)",
                 background: msg.ok ? "oklch(0.7 0.2 145 / 0.1)" : "oklch(0.6 0.25 25 / 0.1)",
@@ -302,7 +305,7 @@ function DashButton({
 function GuiButton({
   label, sub, accent, onClick, disabled, spinning,
 }: {
-  label: string; sub: string; accent: string;
+  label: ReactNode; sub: string; accent: string;
   onClick: () => void; disabled: boolean; spinning: boolean;
 }) {
   return (

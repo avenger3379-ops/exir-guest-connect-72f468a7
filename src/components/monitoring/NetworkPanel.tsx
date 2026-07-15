@@ -4,12 +4,13 @@
 //   ▸ IP settings form (IP / mask / gateway / DNS1 / DNS2)
 //   ▸ Open Share button (opens \\<ip>\<share> in Explorer on operator PC)
 
-import { useEffect, useState } from "react";
-import { Loader2, Wifi, ShieldOff, Save, FolderOpen, Check, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Loader2, Wifi, ShieldOff, Save, FolderOpen, Check, X, RefreshCw } from "lucide-react";
 import {
   DEFAULT_SHARES,
   disableProxy,
   flushDns,
+  getLiveIpInfo,
   loadIpSettings,
   openShare,
   saveIpSettings,
@@ -28,20 +29,60 @@ export function NetworkPanel({ machine }: Props) {
 
   const clientIp = getMachine(loadVncConfig(), machine)?.host || "";
   const [ip, setIp] = useState("");
-  const [mask, setMask] = useState("255.255.255.0");
-  const [gateway, setGateway] = useState("192.168.3.1");
-  const [dns1, setDns1] = useState("178.22.122.100");
-  const [dns2, setDns2] = useState("185.51.200.2");
+  const [mask, setMask] = useState("");
+  const [gateway, setGateway] = useState("");
+  const [dns1, setDns1] = useState("");
+  const [dns2, setDns2] = useState("");
   const [share, setShare] = useState("Drive H");
+  // True once we've populated the fields at least once (from cache or live),
+  // so the live fetch's success handler knows whether it's safe to write "".
+  const [live, setLive] = useState(false);
+
+  // ip settings: show whatever's already known (last-saved / mapped VNC ip)
+  // immediately so the boxes are never empty just because the client-agent
+  // is unreachable or running an older build without /net/info yet. If the
+  // live fetch below succeeds, it overwrites these with the client's actual
+  // current values (which may legitimately be blank).
+  const [ipLoading, setIpLoading] = useState(false);
+  const [ipLoadError, setIpLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = loadIpSettings(machine);
     setIp(saved.ip || clientIp);
-    if (saved.mask) setMask(saved.mask);
-    if (saved.gateway) setGateway(saved.gateway);
-    if (saved.dns1) setDns1(saved.dns1);
-    if (saved.dns2) setDns2(saved.dns2);
+    setMask(saved.mask || "");
+    setGateway(saved.gateway || "");
+    setDns1(saved.dns1 || "");
+    setDns2(saved.dns2 || "");
+    setLive(false);
   }, [machine, clientIp]);
+
+  const refreshLiveIp = useCallback(async () => {
+    setIpLoading(true);
+    setIpLoadError(null);
+    const r = await getLiveIpInfo(machine);
+    setIpLoading(false);
+    if (!r.ok) {
+      // Agent unreachable, or an older build without /net/info (404) — keep
+      // whatever was already showing (cached/mapped values) instead of
+      // clearing the form.
+      setIpLoadError(
+        r.error ||
+          "دریافت تنظیمات واقعی از کلاینت ناموفق بود — نسخه‌ی client-agent روی این سیستم رو با آخرین نسخه (فایل exir-client-agent.mjs) آپدیت کن.",
+      );
+      return;
+    }
+    setLive(true);
+    setIp(r.ip);
+    setMask(r.mask);
+    setGateway(r.gateway);
+    setDns1(r.dns1);
+    setDns2(r.dns2);
+  }, [machine]);
+
+  useEffect(() => {
+    void refreshLiveIp();
+  }, [refreshLiveIp]);
+
 
   async function run(key: string, fn: () => Promise<{ ok: boolean; error?: string; output?: string; path?: string }>) {
     setBusy(key);
@@ -97,11 +138,55 @@ export function NetworkPanel({ machine }: Props) {
         </select>
       </div>
 
-      {/* IP settings */}
+      {/* IP settings — shows the client's real live IPv4 config once the
+          client-agent (/net/info) answers; until then (or if it's an older
+          agent build without that route) it falls back to the last-known
+          values instead of going blank. */}
       <div className="mt-3 rounded-md border border-border/60 bg-background/30 p-2.5">
-        <div className="mb-1.5 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">ip settings</div>
+        <div className="mb-1.5 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+            ip settings
+            <button
+              onClick={() => void refreshLiveIp()}
+              disabled={ipLoading}
+              title="دریافت مجدد تنظیمات واقعی از کلاینت"
+              className="rounded border border-border/60 p-0.5 text-muted-foreground transition hover:border-cyan-500/60 hover:text-cyan-300 disabled:opacity-50"
+            >
+              <RefreshCw size={10} className={ipLoading ? "animate-spin" : ""} />
+            </button>
+            {!ipLoading && (
+              <span
+                className="font-fa rounded px-1 py-0.5 text-[8px] normal-case tracking-normal"
+                lang="fa"
+                style={
+                  live
+                    ? { color: "var(--neon-green)", background: "var(--neon-green)15" }
+                    : { color: "var(--neon-amber)", background: "var(--neon-amber)15" }
+                }
+              >
+                {live ? "زنده از کلاینت" : "آخرین مقدار ذخیره‌شده"}
+              </span>
+            )}
+          </div>
+          {clientIp && (
+            <div className="flex items-center gap-1.5 font-mono text-[9px]">
+              <span className="font-fa text-muted-foreground" lang="fa">آدرس اتصال (VNC):</span>
+              <span className="rounded border border-cyan-500/40 bg-cyan-500/10 px-1.5 py-0.5 text-cyan-300" dir="ltr">{clientIp}</span>
+            </div>
+          )}
+        </div>
+        {ipLoading && (
+          <div className="font-fa mb-1.5 flex items-center gap-1.5 font-mono text-[9px] text-muted-foreground" lang="fa">
+            <Loader2 size={10} className="animate-spin" /> در حال دریافت تنظیمات واقعی از کلاینت…
+          </div>
+        )}
+        {ipLoadError && !ipLoading && (
+          <div className="font-fa mb-1.5 rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-[9px] text-amber-300" lang="fa">
+            {ipLoadError}
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
-          <Field label="IP"      value={ip}      onChange={setIp} />
+          <Field label="IP" value={ip} onChange={setIp} />
           <Field label="Mask"    value={mask}    onChange={setMask} />
           <Field label="Gateway" value={gateway} onChange={setGateway} />
           <Field label="DNS 1"   value={dns1}    onChange={setDns1} />
@@ -124,7 +209,7 @@ export function NetworkPanel({ machine }: Props) {
 
       {status && (
         <div
-          className="mt-2 rounded border px-2 py-1 font-mono text-[10px]"
+          className="font-fa mt-2 rounded border px-2 py-1 font-mono text-[10px]"
           style={{
             borderColor: status.ok ? "var(--neon-green)55" : "var(--neon-red)55",
             background: status.ok ? "var(--neon-green)0d" : "var(--neon-red)0d",
@@ -138,15 +223,17 @@ export function NetworkPanel({ machine }: Props) {
   );
 }
 
-function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function Field({ label, value, onChange, hint }: { label: string; value: string; onChange: (v: string) => void; hint?: string }) {
   return (
     <label className="block">
       <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{label}</span>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        dir="ltr"
         className="mt-0.5 w-full rounded border border-border bg-background/60 px-2 py-1 font-mono text-[11px] text-foreground outline-none focus:border-cyan-500"
       />
+      {hint && <span className="mt-0.5 block font-mono text-[8px] text-amber-400/80">{hint}</span>}
     </label>
   );
 }

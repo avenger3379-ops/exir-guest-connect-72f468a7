@@ -9,6 +9,7 @@ import {
   type CacheSshConfig,
   type ClientCache,
 } from "@/lib/cache-activity";
+import { isComposing } from "@/lib/compose-lock";
 
 const POLL_MS = 3000;
 const WINDOW_MS = 15_000;
@@ -38,6 +39,7 @@ export function CacheActivityPanel() {
     let alive = true;
     const seen = new Set<string>();
     async function tick() {
+      if (isComposing()) return;
       const r = await fetchCacheTail(cfg, 300);
       if (!alive) return;
       if (!r.ok) { setError(r.error || "ssh error"); return; }

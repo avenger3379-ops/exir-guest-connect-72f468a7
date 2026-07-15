@@ -9,6 +9,7 @@ import {
   type Reservation,
   type SeatKind,
 } from "@/lib/reservations";
+import { isComposing } from "@/lib/compose-lock";
 
 const KIND_COLOR: Record<SeatKind, string> = {
   pc:   "var(--neon-cyan)",
@@ -26,7 +27,10 @@ export function ReservationBoard() {
     const h = () => setRes(loadReservations());
     window.addEventListener("exir:reservations", h);
     window.addEventListener("storage", h);
-    const id = setInterval(() => setRes(loadReservations()), 30_000);
+    const id = setInterval(() => {
+      if (isComposing()) return;
+      setRes(loadReservations());
+    }, 30_000);
     return () => {
       window.removeEventListener("exir:reservations", h);
       window.removeEventListener("storage", h);

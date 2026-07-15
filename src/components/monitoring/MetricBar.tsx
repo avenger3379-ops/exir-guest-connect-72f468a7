@@ -1,8 +1,9 @@
+import type { ReactNode } from "react";
 import type { Band } from "@/lib/gauge-settings";
 import { colorFor } from "@/lib/gauge-settings";
 
 interface MetricBarProps {
-  label: string;
+  label: ReactNode;
   value: number;
   unit?: string;
   max?: number;

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Gamepad2 } from "lucide-react";
 import { loadPlatforms, type PlatformStatus, LATENCY_TARGETS } from "@/lib/game-platforms";
+import { isComposing } from "@/lib/compose-lock";
 
 const REFRESH_MS = 30_000;
 
@@ -18,6 +19,7 @@ export function GamePlatformsPanel() {
   useEffect(() => {
     let alive = true;
     async function tick() {
+      if (isComposing()) return;
       const s = await loadPlatforms();
       if (alive) setItems(s);
     }
@@ -29,6 +31,7 @@ export function GamePlatformsPanel() {
   useEffect(() => {
     let alive = true;
     async function tickLat() {
+      if (isComposing()) return;
       const flat: { plat: string; region: string; host: string }[] = [];
       for (const [plat, arr] of Object.entries(LATENCY_TARGETS)) {
         for (const t of arr) flat.push({ plat, ...t });
@@ -64,7 +67,7 @@ export function GamePlatformsPanel() {
         </h3>
         {down && (
           <span className="font-mono text-[10px] uppercase" style={{ color: "var(--neon-red)" }}>
-            {down.name} مشکل دارد
+            {down.name} <span className="font-fa normal-case" lang="fa">مشکل دارد</span>
           </span>
         )}
       </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Gamepad2, Zap } from "lucide-react";
+import { isComposing } from "@/lib/compose-lock";
 
 type Level = "ok" | "warn" | "down" | "unknown";
 
@@ -164,6 +165,7 @@ export function SteamEpicStatus() {
   useEffect(() => {
     let alive = true;
     async function tick() {
+      if (isComposing()) return;
       const bundle = await loadBundle();
       if (alive) setB(bundle);
     }

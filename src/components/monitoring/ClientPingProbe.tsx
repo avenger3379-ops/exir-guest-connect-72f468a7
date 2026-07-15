@@ -7,6 +7,7 @@ import type { ClientStatus } from "@/lib/monitoring-types";
 import { ipFromMachine } from "@/lib/cache-activity";
 import { detectGame, pingHosts, publishClientPing, type ClientPing } from "@/lib/client-ping";
 import { getMachine, loadVncConfig } from "@/lib/vnc-config";
+import { isComposing } from "@/lib/compose-lock";
 
 const POLL_MS = 3000;
 const HISTORY = 20;
@@ -22,6 +23,7 @@ export function ClientPingProbe({ clients }: Props) {
     let alive = true;
 
     async function tick() {
+      if (isComposing()) return;
       const cfg = loadVncConfig();
       const list = clientsRef.current.filter((c) => c.online !== false);
       if (!list.length) return;

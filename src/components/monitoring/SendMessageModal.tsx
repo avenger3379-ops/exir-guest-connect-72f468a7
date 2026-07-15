@@ -1,15 +1,23 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { ImagePlus, LayoutTemplate, Loader2, MessageSquareText, Moon, Sun, Timer, Volume2, VolumeX, X } from "lucide-react";
 import { sendMessage, buildFullMessageHtml } from "@/lib/message";
 import type { MessageButtonOpt } from "@/lib/message-template";
 import { MESSAGE_PRESETS } from "@/lib/message-presets";
+import { setComposing } from "@/lib/compose-lock";
 
 interface Props {
   machine: string;
   onClose: () => void;
 }
 
-export function SendMessageModal({ machine, onClose }: Props) {
+// Wrapped in memo: ClientDetailModal (the parent) still re-renders on its
+// own background subscriptions (e.g. LanCache activity) every few seconds
+// while this modal is open. `machine` and `onClose` are stable references
+// while it's open (see ClientDetailModal.tsx), so — same fix pattern as
+// ClientDetailModal itself — this now only re-renders for its own state,
+// not the parent's ticks. This is what was still "refreshing" the compose
+// form and eating keystrokes/focus every few seconds.
+export const SendMessageModal = memo(function SendMessageModal({ machine, onClose }: Props) {
   const [text, setText] = useState("");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [imageDataUrl, setImageDataUrl] = useState<string | undefined>(undefined);
@@ -35,6 +43,14 @@ export function SendMessageModal({ machine, onClose }: Props) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  // Pause background dashboard polling for as long as this modal is open —
+  // see src/lib/compose-lock.ts. Fixes the "page refreshes every few
+  // seconds and I can't type" issue in the message textarea.
+  useEffect(() => {
+    setComposing(true);
+    return () => setComposing(false);
+  }, []);
 
   const buttons: MessageButtonOpt[] = useMemo(() => {
     const list = [{ label: btn1 || "باشه" }];
@@ -138,11 +154,11 @@ export function SendMessageModal({ machine, onClose }: Props) {
         className="relative grid w-full max-w-4xl grid-cols-1 overflow-hidden rounded-2xl glass-panel neon-border-magenta md:grid-cols-2"
       >
         {/* ── Form ─────────────────────────────────────────────────── */}
-        <div className="max-h-[85vh] overflow-y-auto p-6">
+        <div className="font-fa max-h-[85vh] overflow-y-auto p-6" lang="fa">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MessageSquareText size={16} className="text-fuchsia-400" />
-              <h2 className="font-mono text-sm font-bold uppercase tracking-widest text-glow-magenta">
+              <h2 className="font-fa font-mono text-sm font-bold uppercase tracking-widest text-glow-magenta">
                 ارسال پیام به {machine}
               </h2>
             </div>
@@ -155,7 +171,7 @@ export function SendMessageModal({ machine, onClose }: Props) {
           </div>
 
           <div className="mt-5">
-            <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <span className="font-fa flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
               <LayoutTemplate size={12} /> قالب‌های آماده
             </span>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -176,7 +192,7 @@ export function SendMessageModal({ machine, onClose }: Props) {
             </div>
           </div>
 
-          <label className="mt-4 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <label className="font-fa mt-4 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             متن پیام
           </label>
           <textarea
@@ -195,7 +211,7 @@ export function SendMessageModal({ machine, onClose }: Props) {
 
           {/* Theme */}
           <div className="mt-4 flex items-center gap-2">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">تم پنجره</span>
+            <span className="font-fa font-mono text-[10px] uppercase tracking-widest text-muted-foreground">تم پنجره</span>
             <div className="flex overflow-hidden rounded-md border border-border/60">
               <button
                 onClick={() => setTheme("dark")}
@@ -231,7 +247,7 @@ export function SendMessageModal({ machine, onClose }: Props) {
 
           {/* Image */}
           <div className="mt-4">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">تصویر (اختیاری)</span>
+            <span className="font-fa font-mono text-[10px] uppercase tracking-widest text-muted-foreground">تصویر (اختیاری)</span>
             <div className="mt-1.5 flex items-center gap-2">
               <button
                 onClick={() => fileRef.current?.click()}
@@ -263,7 +279,7 @@ export function SendMessageModal({ machine, onClose }: Props) {
             {countdownOn && (
               <div className="mt-2 grid grid-cols-3 gap-2">
                 <div className="col-span-1">
-                  <span className="font-mono text-[9px] uppercase text-muted-foreground">دقیقه</span>
+                  <span className="font-fa font-mono text-[9px] uppercase text-muted-foreground">دقیقه</span>
                   <input
                     type="number"
                     min={1}
@@ -274,7 +290,7 @@ export function SendMessageModal({ machine, onClose }: Props) {
                   />
                 </div>
                 <div className="col-span-2">
-                  <span className="font-mono text-[9px] uppercase text-muted-foreground">برچسب</span>
+                  <span className="font-fa font-mono text-[9px] uppercase text-muted-foreground">برچسب</span>
                   <input
                     dir="rtl"
                     value={countdownLabel}
@@ -294,7 +310,7 @@ export function SendMessageModal({ machine, onClose }: Props) {
             </label>
             {autoCloseOn && (
               <div className="mt-2">
-                <span className="font-mono text-[9px] uppercase text-muted-foreground">ثانیه تا بسته شدن</span>
+                <span className="font-fa font-mono text-[9px] uppercase text-muted-foreground">ثانیه تا بسته شدن</span>
                 <input
                   type="number"
                   min={3}
@@ -309,7 +325,7 @@ export function SendMessageModal({ machine, onClose }: Props) {
 
           {/* Buttons */}
           <div className="mt-4">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">دکمه‌ها</span>
+            <span className="font-fa font-mono text-[10px] uppercase tracking-widest text-muted-foreground">دکمه‌ها</span>
             <div className="mt-1.5 space-y-2">
               <input
                 dir="rtl"
@@ -368,7 +384,7 @@ export function SendMessageModal({ machine, onClose }: Props) {
         {/* ── Live preview ─────────────────────────────────────────── */}
         <div className="flex items-center justify-center bg-black/30 p-6">
           <div className="w-full">
-            <div className="mb-2 text-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <div className="font-fa mb-2 text-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
               پیش‌نمایش دقیقاً همانی که روی صفحه‌ی کاربر نشان داده می‌شود
             </div>
             <div className="overflow-hidden rounded-xl border border-border/60" style={{ height: 560 }}>
@@ -379,4 +395,4 @@ export function SendMessageModal({ machine, onClose }: Props) {
       </div>
     </div>
   );
-}
+});
