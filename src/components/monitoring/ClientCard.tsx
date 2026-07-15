@@ -258,14 +258,37 @@ export function ClientCard({ client, onClick }: Props) {
         : cache?.mode === "mixed"
           ? "var(--neon-amber)"
           : "oklch(0.5 0.02 250)";
-  const cacheLabel =
-    cache?.mode === "hit"
-      ? "CACHE"
-      : cache?.mode === "miss"
-        ? "NET"
-        : cache?.mode === "mixed"
-          ? "MIX"
-          : "IDLE";
+
+  // ── Live ping subscription (replaces the old "IDLE" pill) ──────────────
+  const [ping, setPing] = useState<ClientPing | null>(null);
+  useEffect(() => {
+    const read = () => {
+      const map = window.__exirClientPing;
+      setPing(map?.[client.machine] || null);
+    };
+    read();
+    window.addEventListener(CLIENT_PING_EVT, read);
+    return () => window.removeEventListener(CLIENT_PING_EVT, read);
+  }, [client.machine]);
+
+  const lanMs = ping?.lanMs ?? null;
+  const lanLoss = lanMs === -1;
+  const lanColor = lanMs === null || lanLoss
+    ? "var(--neon-red)"
+    : colorFor(settings.ping, lanMs);
+  // Blink red if the highest ping band was exceeded in the last ~20s window.
+  const highBand = [...settings.ping].sort((a, b) => a.max - b.max);
+  const critMax = highBand[highBand.length - 2]?.max ?? 80;
+  const recentHigh = (ping?.history || []).slice(-10).some((v) => v > critMax || v === -1);
+  const shouldBlink = recentHigh || lanLoss;
+
+  const gameMs = ping?.gameMs ?? null;
+  const gameColor = gameMs === null
+    ? "oklch(0.5 0.02 250)"
+    : gameMs < 0
+      ? "var(--neon-red)"
+      : colorFor(settings.ping, gameMs);
+
 
   // short gpu model: "NVIDIA GeForce RTX 3070" -> "RTX 3070"
   const shortGpu =
