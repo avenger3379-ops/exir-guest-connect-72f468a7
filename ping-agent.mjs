@@ -349,6 +349,32 @@ const server = createServer((req, res) => {
     return res.end(JSON.stringify({ ok: true, jobs: listGsJobs() }));
   }
 
+  // ── Phase 6: open a network share in Explorer on the OPERATOR PC ──────
+  // Browsers block navigation to file:// URIs from https pages, so the
+  // dashboard POSTs {host, share} here and we launch Explorer locally.
+  if (req.method === "POST" && req.url === "/net/open-share") {
+    let body = "";
+    req.on("data", (c) => { body += c; if (body.length > 4_000) req.destroy(); });
+    req.on("end", () => {
+      try {
+        const { host, share } = JSON.parse(body || "{}");
+        if (!host) throw new Error("host required");
+        const s = String(share || "").replace(/^[\\/]+/, "");
+        const unc = s ? `\\\\${host}\\${s}` : `\\\\${host}`;
+        if (!IS_WIN) throw new Error("open-share requires Windows operator PC");
+        const child = spawn("explorer.exe", [unc], { detached: true, stdio: "ignore", windowsHide: false });
+        child.on("error", () => { /* explorer returns non-zero even on success */ });
+        child.unref();
+        res.writeHead(200, { ...CORS, "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: true, path: unc }));
+      } catch (e) {
+        res.writeHead(200, { ...CORS, "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: false, error: String(e?.message || e) }));
+      }
+    });
+    return;
+  }
+
   res.writeHead(404, CORS);
   res.end();
 });
