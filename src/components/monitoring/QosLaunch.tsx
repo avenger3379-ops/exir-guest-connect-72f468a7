@@ -32,6 +32,7 @@ export function QosLaunch({ machines }: Props) {
   const [openId, setOpenId] = useState<string | null>(null);
   const [colorEdit, setColorEdit] = useState(false);
   const [backend, setBackend] = useState<QosBackend>(() => loadQosBackend());
+  const [errorByMachine, setErrorByMachine] = useState<Record<string, string>>({});
   const rootRef = useRef<HTMLDivElement>(null);
 
   function changeBackend(b: QosBackend) {
@@ -54,7 +55,18 @@ export function QosLaunch({ machines }: Props) {
       const merged: QosState = { ...current, ...patch };
       const next = { ...prev, [machine]: merged };
       saveQosStates(next);
-      void pushQos(machine, merged);
+      setErrorByMachine((e) => {
+        if (!(machine in e)) return e;
+        const { [machine]: _drop, ...rest } = e;
+        return rest;
+      });
+      void pushQos(machine, merged).then((res) => {
+        if (!res.ok) {
+          // Real failure on the target VIP — don't leave the UI showing a
+          // tier that never actually applied without any explanation.
+          setErrorByMachine((e) => ({ ...e, [machine]: res.error || "apply failed" }));
+        }
+      });
       return next;
     });
   }
@@ -196,9 +208,18 @@ export function QosLaunch({ machines }: Props) {
                   );
                 })}
               </div>
-              <div className="mt-1 text-center font-mono text-[8px] uppercase text-muted-foreground">
-                agent → mikrotik
-              </div>
+              {errorByMachine[m] ? (
+                <div
+                  className="mt-1 rounded border border-red-500/40 bg-red-500/10 px-1.5 py-1 text-center font-mono text-[8px] normal-case text-red-400"
+                  title={errorByMachine[m]}
+                >
+                  ⚠ اعمال نشد: {errorByMachine[m]}
+                </div>
+              ) : (
+                <div className="mt-1 text-center font-mono text-[8px] uppercase text-muted-foreground">
+                  agent → {backend}
+                </div>
+              )}
             </div>
           );
         })()}

@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
-import { Cpu, MemoryStick, Thermometer, TriangleAlert, Loader2, Check, X, Monitor } from "lucide-react";
+import { Cpu, MemoryStick, Thermometer, TriangleAlert, Loader2, Check, X } from "lucide-react";
 import type { ClientStatus } from "@/lib/monitoring-types";
 import { CircularGauge } from "./CircularGauge";
 import { loadSettings, type GaugeSettings } from "@/lib/gauge-settings";
 import { ipFromMachine, type ClientCache } from "@/lib/cache-activity";
 import { CACHE_EVT } from "./CacheActivityPanel";
 import { sendPunish } from "@/lib/punish";
-import { launchVnc, loadVncConfig } from "@/lib/vnc-config";
 
 interface Props {
   client: ClientStatus;
@@ -68,71 +67,6 @@ function BrandBadge({ brand }: { brand: "nvidia" | "amd" | "intel" | "other" }) 
       />
       {cfg.text}
     </span>
-  );
-}
-
-type VncState = "idle" | "launching" | "ok" | "error";
-
-/** Small monitor-icon button next to the punish trigger. Click → launches
- * `vnc://<machine>` the same way the top "vnc quick connect" row does. */
-function VncButton({ machine }: { machine: string }) {
-  const [state, setState] = useState<VncState>("idle");
-  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(
-    () => () => {
-      if (resetTimer.current) clearTimeout(resetTimer.current);
-    },
-    [],
-  );
-
-  function fire(e: ReactMouseEvent) {
-    e.stopPropagation();
-    if (state === "launching") return;
-    setState("launching");
-    void launchVnc(loadVncConfig(), machine).then((res) => {
-      setState(res.ok ? "ok" : "error");
-      if (resetTimer.current) clearTimeout(resetTimer.current);
-      resetTimer.current = setTimeout(() => setState("idle"), res.ok ? 1500 : 2500);
-    });
-  }
-
-  const label =
-    state === "launching"
-      ? "در حال اتصال…"
-      : state === "ok"
-        ? "لانچ شد"
-        : state === "error"
-          ? "خطا در اتصال VNC"
-          : `اتصال VNC به ${machine}`;
-
-  return (
-    <button
-      type="button"
-      onClick={fire}
-      title={label}
-      className={`relative inline-flex size-6 shrink-0 items-center justify-center rounded-full border transition-all ${
-        state === "error"
-          ? "border-[var(--neon-red)] bg-[var(--neon-red)]/15"
-          : state === "ok"
-            ? "border-[var(--neon-green)] bg-[var(--neon-green)]/15"
-            : "border-cyan-500/40 bg-cyan-500/10 hover:border-cyan-400 hover:bg-cyan-500/20"
-      }`}
-      style={{ boxShadow: state === "idle" ? undefined : "0 0 8px var(--neon-cyan)66" }}
-    >
-      {state === "launching" ? (
-        <Loader2 className="size-3.5 animate-spin" style={{ color: "var(--neon-cyan)" }} />
-      ) : state === "ok" ? (
-        <Check className="size-3.5" style={{ color: "var(--neon-green)" }} />
-      ) : state === "error" ? (
-        <X className="size-3.5" style={{ color: "var(--neon-red)" }} />
-      ) : (
-        <Monitor
-          className="size-3.5"
-          style={{ color: "var(--neon-cyan)", filter: "drop-shadow(0 0 3px var(--neon-cyan))" }}
-        />
-      )}
-    </button>
   );
 }
 
@@ -400,7 +334,6 @@ export function ClientCard({ client, onClick }: Props) {
               <span className="text-muted-foreground">▶ </span>
               <span className="text-foreground">{client.topProcess}</span>
             </span>
-            <VncButton machine={client.machine} />
           </div>
         </>
       ) : (
