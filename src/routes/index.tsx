@@ -377,6 +377,7 @@ function Dashboard() {
         </footer>
       </div>
 
+      <ClientPingProbe clients={clients} />
       <ClientDetailModal client={selected} onClose={() => setSelected(null)} />
     </div>
   );
