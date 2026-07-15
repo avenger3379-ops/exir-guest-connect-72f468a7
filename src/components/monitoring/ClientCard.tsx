@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
-import { Cpu, MemoryStick, Thermometer, TriangleAlert, Loader2, Check, X, Monitor } from "lucide-react";
+import { Cpu, MemoryStick, Thermometer, TriangleAlert, Loader2, Check, X, Monitor, Wifi } from "lucide-react";
 import type { ClientStatus } from "@/lib/monitoring-types";
 import { CircularGauge } from "./CircularGauge";
-import { loadSettings, type GaugeSettings } from "@/lib/gauge-settings";
+import { loadSettings, colorFor, type GaugeSettings } from "@/lib/gauge-settings";
 import { ipFromMachine, type ClientCache } from "@/lib/cache-activity";
 import { CACHE_EVT } from "./CacheActivityPanel";
+import { CLIENT_PING_EVT, type ClientPing } from "@/lib/client-ping";
 import { sendPunish } from "@/lib/punish";
 import { launchVnc, loadVncConfig } from "@/lib/vnc-config";
 
