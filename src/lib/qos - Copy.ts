@@ -15,6 +15,22 @@ export interface QosColors {
 
 const STATE_KEY = "exir.qos.state.v1";
 const COLOR_KEY = "exir.qos.colors.v1";
+const BACKEND_KEY = "exir.qos.backend.v1";
+
+export type QosBackend = "mikrotik" | "netlimiter";
+
+export function loadQosBackend(): QosBackend {
+  try {
+    const v = localStorage.getItem(BACKEND_KEY);
+    if (v === "netlimiter" || v === "mikrotik") return v;
+  } catch { /* ignore */ }
+  return "mikrotik";
+}
+
+export function saveQosBackend(b: QosBackend) {
+  localStorage.setItem(BACKEND_KEY, b);
+  window.dispatchEvent(new Event("exir:qos-backend"));
+}
 
 export const DEFAULT_COLORS: QosColors = {
   "500K": "#22c55e",
@@ -51,17 +67,30 @@ export function saveQosColors(c: QosColors) {
   localStorage.setItem(COLOR_KEY, JSON.stringify(c));
 }
 
-// Try to push change to local agent (which will SSH/API-call Mikrotik).
-// Silently no-ops if agent not running.
-export async function pushQos(machine: string, state: QosState): Promise<boolean> {
+export interface QosPushResult {
+  ok: boolean;
+  error?: string;
+  via?: string; // "client-agent" | "psexec" | mikrotik path, when applicable
+}
+
+// Try to push change to local agent (which will apply via MikroTik REST or
+// NetLimiter on the target VIP). Returns the *actual* backend result — the
+// HTTP call succeeding just means the agent responded, not that the tier
+// was really applied on the client, so callers must check `.ok`.
+export async function pushQos(machine: string, state: QosState): Promise<QosPushResult> {
   try {
+    const backend = loadQosBackend();
     const r = await fetch("http://localhost:8765/qos", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ machine, ...state }),
+      body: JSON.stringify({ machine, backend, ...state }),
     });
-    return r.ok;
-  } catch {
-    return false;
+    const j = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string; via?: string };
+    if (!r.ok || !j.ok) {
+      return { ok: false, error: j.error || `agent HTTP ${r.status}` };
+    }
+    return { ok: true, via: j.via };
+  } catch (e) {
+    return { ok: false, error: `agent unreachable: ${String((e as Error)?.message || e)}` };
   }
 }
