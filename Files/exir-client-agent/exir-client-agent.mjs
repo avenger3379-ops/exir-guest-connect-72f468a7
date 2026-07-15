@@ -7,6 +7,11 @@
 //   http://<client-ip>:8766/punish    → same, with kbd lock + Alt+F4 block
 //   http://<client-ip>:8766/netlimiter/apply → set/re-apply NetLimiter tier
 //                                               body: { tier, bytes }
+//   http://<client-ip>:8766/net/info  → GET, returns the client's actual
+//                                        current IPv4 config: { ok, ip, mask,
+//                                        gateway, dns1, dns2 }. Anything the
+//                                        OS doesn't report comes back as ""
+//                                        — never a guessed/placeholder value.
 //   http://<client-ip>:8766/health    → { ok:true, machine, version }
 //
 // Everything runs in the interactive user session because the agent itself
@@ -30,7 +35,7 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir, hostname } from "node:os";
 import { join } from "node:path";
 
-const VERSION = "1.1.0";
+const VERSION = "1.2.0";
 const PORT = Number(process.env.EXIR_CLIENT_PORT || 8766);
 const MACHINE = (process.env.EXIR_MACHINE_ID || hostname()).toUpperCase();
 // NOTE: nlq.exe does NOT exist in NetLimiter 4.1.13 (it was a CLI tool from
@@ -134,83 +139,75 @@ async function applyNetLimiter(tier, bytes) {
   };
 }
 
-// ── Network tools (Phase 6) ───────────────────────────────────────────────
-// All of these run locally on the VIP under the interactive user session, no
-// PsExec / SMB needed. The agent runs from a Scheduled Task at logon, but the
-// network commands themselves (ipconfig /flushdns, netsh interface ip set,
-// registry writes to WinINET) need admin. Install the scheduled task with
-// "Run with highest privileges" (install-service.ps1 sets that flag) — then
-// these all work without any UAC prompt.
+// ── Live network info (GET /net/info) ──────────────────────────────────
+// Reads whatever the OS actually has configured on the active adapter right
+// now — IP, subnet mask, default gateway, DNS servers — and returns exactly
+// that. Any field the OS doesn't report comes back as "" (never a made-up
+// placeholder); the operator UI is expected to render those as empty boxes
+// rather than guessing.
+const NET_INFO_PS = `
+$ErrorActionPreference = 'SilentlyContinue'
+function PrefixToMask($p) {
+  if (-not $p) { return '' }
+  $bits = ('1' * [int]$p).PadRight(32, '0')
+  $bytes = for ($i = 0; $i -lt 32; $i += 8) { [Convert]::ToByte($bits.Substring($i, 8), 2) }
+  return ($bytes -join '.')
+}
+$cfg = Get-NetIPConfiguration | Where-Object {
+  $_.IPv4Address -and $_.NetAdapter.Status -eq 'Up'
+} | Sort-Object { if ($_.IPv4DefaultGateway) { 0 } else { 1 } } | Select-Object -First 1
+$ip = ''; $mask = ''; $gw = ''; $dns = @()
+if ($cfg) {
+  $ip = [string]$cfg.IPv4Address.IPAddress
+  $mask = PrefixToMask $cfg.IPv4Address.PrefixLength
+  if ($cfg.IPv4DefaultGateway) { $gw = [string]$cfg.IPv4DefaultGateway.NextHop }
+  if ($cfg.DNSServer) {
+    $dns = @($cfg.DNSServer | Where-Object { $_.AddressFamily -eq 2 } | ForEach-Object { $_.ServerAddresses } | Where-Object { $_ })
+  }
+}
+$obj = [PSCustomObject]@{
+  ok = $true
+  ip = $ip
+  mask = $mask
+  gateway = $gw
+  dns1 = if ($dns.Count -ge 1) { $dns[0] } else { '' }
+  dns2 = if ($dns.Count -ge 2) { $dns[1] } else { '' }
+}
+$obj | ConvertTo-Json -Compress
+`.trim();
 
-function runPs(script, timeout = 12000) {
+function readNetInfo() {
   return new Promise((resolve) => {
     execFile(
       "powershell",
-      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script],
-      { timeout, windowsHide: true },
+      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", NET_INFO_PS],
+      { timeout: 8000, windowsHide: true },
       (err, stdout, stderr) => {
-        if (err) {
-          resolve({ ok: false, error: (stderr || err.message || "").toString().slice(0, 400) });
-        } else {
-          resolve({ ok: true, output: String(stdout || "").slice(0, 800) });
+        const text = String(stdout || "");
+        const jsonLine = text
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .find((l) => l.startsWith("{") && l.endsWith("}"));
+        if (jsonLine) {
+          try {
+            const parsed = JSON.parse(jsonLine);
+            return resolve({
+              ok: true,
+              ip: parsed.ip || "",
+              mask: parsed.mask || "",
+              gateway: parsed.gateway || "",
+              dns1: parsed.dns1 || "",
+              dns2: parsed.dns2 || "",
+            });
+          } catch { /* fall through */ }
         }
+        resolve({
+          ok: false,
+          error: (stderr || err?.message || "no JSON output from Get-NetIPConfiguration").toString().slice(0, 300),
+        });
       },
     );
   });
-}
-
-function flushDns() {
-  return new Promise((resolve) => {
-    execFile("ipconfig", ["/flushdns"], { timeout: 8000, windowsHide: true }, (err, stdout, stderr) => {
-      if (err) return resolve({ ok: false, error: (stderr || err.message || "").toString().slice(0, 300) });
-      resolve({ ok: true, output: String(stdout || "").slice(0, 400) });
-    });
-  });
-}
-
-function disableProxy() {
-  // Clears WinINET (IE/Edge/most apps) proxy state. DOES NOT touch DNS or IP.
-  const script = [
-    "$k='HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings';",
-    "Set-ItemProperty -Path $k -Name ProxyEnable -Value 0 -Type DWord -Force;",
-    "Remove-ItemProperty -Path $k -Name ProxyServer -ErrorAction SilentlyContinue;",
-    "Remove-ItemProperty -Path $k -Name AutoConfigURL -ErrorAction SilentlyContinue;",
-    "Remove-ItemProperty -Path $k -Name ProxyOverride -ErrorAction SilentlyContinue;",
-    // Also clear WinHTTP (background services). Requires admin — Scheduled Task
-    // runs with highest privileges so this succeeds.
-    "netsh winhttp reset proxy | Out-Null;",
-    "'ok'",
-  ].join(" ");
-  return runPs(script);
-}
-
-// Picks the primary Ethernet/Wi-Fi adapter (the one with a default gateway).
-// Returns its InterfaceAlias — that's what `netsh interface ip set` needs.
-async function primaryAdapter() {
-  const r = await runPs(
-    "(Get-NetIPConfiguration | Where-Object { $_.IPv4DefaultGateway -ne $null } | Select-Object -First 1 -ExpandProperty InterfaceAlias)",
-    6000,
-  );
-  return r.ok ? (r.output || "").trim() : "";
-}
-
-async function setIp({ ip, mask, gateway, dns1, dns2, adapter }) {
-  const iface = (adapter && String(adapter).trim()) || (await primaryAdapter());
-  if (!iface) return { ok: false, error: "could not detect network adapter" };
-  const prefix = maskToPrefix(mask) || 24;
-  // Reset then set — same pattern netsh docs recommend.
-  const parts = [
-    `netsh interface ipv4 set address name="${iface}" source=static addr=${ip} mask=${mask} gateway=${gateway} | Out-Null`,
-    `netsh interface ipv4 set dnsservers name="${iface}" source=static addr=${dns1} register=primary validate=no | Out-Null`,
-  ];
-  if (dns2) parts.push(`netsh interface ipv4 add dnsservers name="${iface}" addr=${dns2} index=2 validate=no | Out-Null`);
-  parts.push(`'ok · ${iface} · ${ip}/${prefix} gw=${gateway} dns=${dns1}${dns2 ? "," + dns2 : ""}'`);
-  return runPs(parts.join("; "), 15000);
-}
-
-function maskToPrefix(mask) {
-  if (!mask) return null;
-  return String(mask).split(".").reduce((a, b) => a + ((Number(b) >>> 0).toString(2).match(/1/g)?.length || 0), 0);
 }
 
 // ── Server ──────────────────────────────────────────────────────────────
@@ -239,20 +236,9 @@ const server = createServer(async (req, res) => {
       return json(res, 200, r);
     }
 
-    // ── Phase 6 network tools ──────────────────────────────────────────
-    if (req.method === "POST" && req.url === "/net/flush-dns") {
-      return json(res, 200, await flushDns());
-    }
-    if (req.method === "POST" && req.url === "/net/disable-proxy") {
-      return json(res, 200, await disableProxy());
-    }
-    if (req.method === "POST" && req.url === "/net/set-ip") {
-      const body = await readBody(req);
-      const p = JSON.parse(body || "{}");
-      if (!p.ip || !p.mask || !p.gateway || !p.dns1) {
-        return json(res, 400, { ok: false, error: "ip, mask, gateway, dns1 required" });
-      }
-      return json(res, 200, await setIp(p));
+    if (req.method === "GET" && req.url === "/net/info") {
+      const r = await readNetInfo();
+      return json(res, r.ok ? 200 : 502, r);
     }
 
     json(res, 404, { ok: false, error: "not found" });
