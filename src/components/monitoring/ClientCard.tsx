@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
-import { Cpu, MemoryStick, Thermometer, TriangleAlert, Loader2, Check, X, Monitor } from "lucide-react";
+import { Cpu, MemoryStick, Thermometer, TriangleAlert, Loader2, Check, X, Monitor, Wifi } from "lucide-react";
 import type { ClientStatus } from "@/lib/monitoring-types";
 import { CircularGauge } from "./CircularGauge";
-import { loadSettings, type GaugeSettings } from "@/lib/gauge-settings";
+import { loadSettings, colorFor, type GaugeSettings } from "@/lib/gauge-settings";
 import { ipFromMachine, type ClientCache } from "@/lib/cache-activity";
 import { CACHE_EVT } from "./CacheActivityPanel";
+import { CLIENT_PING_EVT, type ClientPing } from "@/lib/client-ping";
 import { sendPunish } from "@/lib/punish";
 import { launchVnc, loadVncConfig } from "@/lib/vnc-config";
 
@@ -257,14 +258,37 @@ export function ClientCard({ client, onClick }: Props) {
         : cache?.mode === "mixed"
           ? "var(--neon-amber)"
           : "oklch(0.5 0.02 250)";
-  const cacheLabel =
-    cache?.mode === "hit"
-      ? "CACHE"
-      : cache?.mode === "miss"
-        ? "NET"
-        : cache?.mode === "mixed"
-          ? "MIX"
-          : "IDLE";
+
+  // ── Live ping subscription (replaces the old "IDLE" pill) ──────────────
+  const [ping, setPing] = useState<ClientPing | null>(null);
+  useEffect(() => {
+    const read = () => {
+      const map = window.__exirClientPing;
+      setPing(map?.[client.machine] || null);
+    };
+    read();
+    window.addEventListener(CLIENT_PING_EVT, read);
+    return () => window.removeEventListener(CLIENT_PING_EVT, read);
+  }, [client.machine]);
+
+  const lanMs = ping?.lanMs ?? null;
+  const lanLoss = lanMs === -1;
+  const lanColor = lanMs === null || lanLoss
+    ? "var(--neon-red)"
+    : colorFor(settings.ping, lanMs);
+  // Blink red if the highest ping band was exceeded in the last ~20s window.
+  const highBand = [...settings.ping].sort((a, b) => a.max - b.max);
+  const critMax = highBand[highBand.length - 2]?.max ?? 80;
+  const recentHigh = (ping?.history || []).slice(-10).some((v) => v > critMax || v === -1);
+  const shouldBlink = recentHigh || lanLoss;
+
+  const gameMs = ping?.gameMs ?? null;
+  const gameColor = gameMs === null
+    ? "oklch(0.5 0.02 250)"
+    : gameMs < 0
+      ? "var(--neon-red)"
+      : colorFor(settings.ping, gameMs);
+
 
   // short gpu model: "NVIDIA GeForce RTX 3070" -> "RTX 3070"
   const shortGpu =
@@ -376,22 +400,42 @@ export function ClientCard({ client, onClick }: Props) {
             <Stat label="FPS" value={client.fps.toFixed(0)} accent="magenta" />
           </div>
 
-          {/* Cache status pill */}
+          {/* Live ping pill — replaces the old IDLE cache pill.
+              Left: LAN ping (blinks red if a spike happened in the last ~20s).
+              Right: game name + game-server ping (only if a game is detected). */}
           <div
-            className="relative mt-2 flex items-center justify-between rounded-md border px-2 py-1 font-mono text-[9px] uppercase tracking-widest"
-            style={{ borderColor: `${cacheColor}55`, background: `${cacheColor}0d` }}
+            className={`relative mt-2 flex items-center justify-between rounded-md border px-2 py-1 font-mono text-[10px] uppercase tracking-widest ${shouldBlink ? "animate-pulse" : ""}`}
+            style={{
+              borderColor: `${lanColor}55`,
+              background: `${lanColor}0d`,
+              boxShadow: shouldBlink ? `0 0 10px ${lanColor}88` : undefined,
+            }}
+            title={ping ? `LAN ${ping.ip}${ping.gameHost ? ` · game host ${ping.gameHost}` : ""}` : ""}
           >
-            <span className="flex items-center gap-1" style={{ color: cacheColor }}>
+            <span className="flex items-center gap-1" style={{ color: lanColor }}>
+              <Wifi size={10} />
+              <span className="font-bold">
+                {lanMs === null ? "…" : lanLoss ? "LOSS" : `${lanMs}ms`}
+              </span>
               <span
-                className="size-1.5 rounded-full"
-                style={{ background: cacheColor, boxShadow: `0 0 5px ${cacheColor}` }}
+                className="ml-1 inline-block size-1.5 rounded-full"
+                style={{ background: cacheColor, boxShadow: `0 0 4px ${cacheColor}` }}
+                title={cache ? `cache ${cache.mode} · ${cache.speedKBs} KB/s` : "cache idle"}
               />
-              {cacheLabel}
             </span>
-            <span className="text-muted-foreground">
-              {cache ? `${cache.speedKBs} KB/s · ${cache.lastService.slice(0, 8)}` : "—"}
+            <span className="flex items-center gap-1" style={{ color: gameColor }}>
+              {ping?.gameName ? (
+                <>
+                  <span className="text-muted-foreground">▸</span>
+                  <span className="font-bold">{ping.gameName}</span>
+                  <span>{gameMs === null ? "" : gameMs < 0 ? "×" : `${gameMs}ms`}</span>
+                </>
+              ) : (
+                <span className="text-muted-foreground">— idle</span>
+              )}
             </span>
           </div>
+
 
           {/* Process pill + punish trigger (warning icon sits to its left) */}
           <div className="relative mt-2 flex items-center justify-center gap-1.5">

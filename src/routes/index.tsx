@@ -26,6 +26,7 @@ import { ReservationBoard } from "@/components/monitoring/ReservationBoard";
 import { DailyReport } from "@/components/monitoring/DailyReport";
 import { CacheActivityPanel } from "@/components/monitoring/CacheActivityPanel";
 import { EpicCdnDiscovery } from "@/components/monitoring/EpicCdnDiscovery";
+import { ClientPingProbe } from "@/components/monitoring/ClientPingProbe";
 import { loadReservations, remainingMinutes, defaultSeats } from "@/lib/reservations";
 import { loadLogo } from "@/lib/branding";
 
@@ -71,7 +72,10 @@ function Dashboard() {
   const dirRef = useRef<FileSystemDirectoryHandle | null>(null);
   const pingsRef = useRef<PingTarget[]>(pings);
   useEffect(() => { pingsRef.current = pings; }, [pings]);
-  const supported = useMemo(() => isFileSystemAccessSupported(), []);
+  // hydration-safe: File System Access API is browser-only, so start with
+  // `false` on the server and flip to the real value after mount.
+  const [supported, setSupported] = useState(false);
+  useEffect(() => { setSupported(isFileSystemAccessSupported()); }, []);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   useEffect(() => {
     let currentUrl: string | null = null;
@@ -373,6 +377,7 @@ function Dashboard() {
         </footer>
       </div>
 
+      <ClientPingProbe clients={clients} />
       <ClientDetailModal client={selected} onClose={() => setSelected(null)} />
     </div>
   );
