@@ -1,9 +1,21 @@
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("/fonts/Vazirmatn[wght].woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --font-sans: "Vazirmatn", sans-serif;
+  --font-fa: "Vazirmatn", sans-serif;
+  --font-en: "Rajdhani", "Inter", sans-serif;
+}
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -88,6 +100,13 @@
   * {
     border-color: var(--color-border);
   }
+  html {
+  font-family: "Vazirmatn", sans-serif;
+  }
+
+  body {
+  font-family: inherit;
+  }
   html, body, #root {
     height: 100%;
   }
@@ -97,6 +116,23 @@
     font-family: var(--font-display);
     font-feature-settings: "ss01", "cv01";
     -webkit-font-smoothing: antialiased;
+  }
+
+  /* Persian text: opt in to Vazirmatn (and RTL flow) via lang="fa" or .font-fa,
+     wherever CSS alone can't tell Persian from English content apart. */
+  [lang="fa"],
+  .font-fa {
+    font-family: var(--font-fa) !important;
+    direction: rtl;
+    unicode-bidi: isolate;
+  }
+
+  /* English/Latin chrome (labels, numbers, machine names) explicitly opts
+     back in to Rajdhani when nested inside a Persian ancestor. */
+  .font-en {
+    font-family: var(--font-en) !important;
+    direction: ltr;
+    unicode-bidi: isolate;
   }
 }
 
