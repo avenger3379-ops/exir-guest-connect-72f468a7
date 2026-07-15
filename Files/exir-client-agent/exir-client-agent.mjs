@@ -134,6 +134,85 @@ async function applyNetLimiter(tier, bytes) {
   };
 }
 
+// ── Network tools (Phase 6) ───────────────────────────────────────────────
+// All of these run locally on the VIP under the interactive user session, no
+// PsExec / SMB needed. The agent runs from a Scheduled Task at logon, but the
+// network commands themselves (ipconfig /flushdns, netsh interface ip set,
+// registry writes to WinINET) need admin. Install the scheduled task with
+// "Run with highest privileges" (install-service.ps1 sets that flag) — then
+// these all work without any UAC prompt.
+
+function runPs(script, timeout = 12000) {
+  return new Promise((resolve) => {
+    execFile(
+      "powershell",
+      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script],
+      { timeout, windowsHide: true },
+      (err, stdout, stderr) => {
+        if (err) {
+          resolve({ ok: false, error: (stderr || err.message || "").toString().slice(0, 400) });
+        } else {
+          resolve({ ok: true, output: String(stdout || "").slice(0, 800) });
+        }
+      },
+    );
+  });
+}
+
+function flushDns() {
+  return new Promise((resolve) => {
+    execFile("ipconfig", ["/flushdns"], { timeout: 8000, windowsHide: true }, (err, stdout, stderr) => {
+      if (err) return resolve({ ok: false, error: (stderr || err.message || "").toString().slice(0, 300) });
+      resolve({ ok: true, output: String(stdout || "").slice(0, 400) });
+    });
+  });
+}
+
+function disableProxy() {
+  // Clears WinINET (IE/Edge/most apps) proxy state. DOES NOT touch DNS or IP.
+  const script = [
+    "$k='HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings';",
+    "Set-ItemProperty -Path $k -Name ProxyEnable -Value 0 -Type DWord -Force;",
+    "Remove-ItemProperty -Path $k -Name ProxyServer -ErrorAction SilentlyContinue;",
+    "Remove-ItemProperty -Path $k -Name AutoConfigURL -ErrorAction SilentlyContinue;",
+    "Remove-ItemProperty -Path $k -Name ProxyOverride -ErrorAction SilentlyContinue;",
+    // Also clear WinHTTP (background services). Requires admin — Scheduled Task
+    // runs with highest privileges so this succeeds.
+    "netsh winhttp reset proxy | Out-Null;",
+    "'ok'",
+  ].join(" ");
+  return runPs(script);
+}
+
+// Picks the primary Ethernet/Wi-Fi adapter (the one with a default gateway).
+// Returns its InterfaceAlias — that's what `netsh interface ip set` needs.
+async function primaryAdapter() {
+  const r = await runPs(
+    "(Get-NetIPConfiguration | Where-Object { $_.IPv4DefaultGateway -ne $null } | Select-Object -First 1 -ExpandProperty InterfaceAlias)",
+    6000,
+  );
+  return r.ok ? (r.output || "").trim() : "";
+}
+
+async function setIp({ ip, mask, gateway, dns1, dns2, adapter }) {
+  const iface = (adapter && String(adapter).trim()) || (await primaryAdapter());
+  if (!iface) return { ok: false, error: "could not detect network adapter" };
+  const prefix = maskToPrefix(mask) || 24;
+  // Reset then set — same pattern netsh docs recommend.
+  const parts = [
+    `netsh interface ipv4 set address name="${iface}" source=static addr=${ip} mask=${mask} gateway=${gateway} | Out-Null`,
+    `netsh interface ipv4 set dnsservers name="${iface}" source=static addr=${dns1} register=primary validate=no | Out-Null`,
+  ];
+  if (dns2) parts.push(`netsh interface ipv4 add dnsservers name="${iface}" addr=${dns2} index=2 validate=no | Out-Null`);
+  parts.push(`'ok · ${iface} · ${ip}/${prefix} gw=${gateway} dns=${dns1}${dns2 ? "," + dns2 : ""}'`);
+  return runPs(parts.join("; "), 15000);
+}
+
+function maskToPrefix(mask) {
+  if (!mask) return null;
+  return String(mask).split(".").reduce((a, b) => a + ((Number(b) >>> 0).toString(2).match(/1/g)?.length || 0), 0);
+}
+
 // ── Server ──────────────────────────────────────────────────────────────
 const server = createServer(async (req, res) => {
   if (req.method === "OPTIONS") { res.writeHead(204, CORS); return res.end(); }
