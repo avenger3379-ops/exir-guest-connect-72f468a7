@@ -72,7 +72,10 @@ function Dashboard() {
   const dirRef = useRef<FileSystemDirectoryHandle | null>(null);
   const pingsRef = useRef<PingTarget[]>(pings);
   useEffect(() => { pingsRef.current = pings; }, [pings]);
-  const supported = useMemo(() => isFileSystemAccessSupported(), []);
+  // hydration-safe: File System Access API is browser-only, so start with
+  // `false` on the server and flip to the real value after mount.
+  const [supported, setSupported] = useState(false);
+  useEffect(() => { setSupported(isFileSystemAccessSupported()); }, []);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   useEffect(() => {
     let currentUrl: string | null = null;
