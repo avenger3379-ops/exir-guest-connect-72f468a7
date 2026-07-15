@@ -5,13 +5,23 @@
 // The operator's ping-agent (on the server) posts JSON to
 //   http://<client-ip>:8766/message   → shows a message window locally
 //   http://<client-ip>:8766/punish    → same, with kbd lock + Alt+F4 block
-//   http://<client-ip>:8766/netlimiter/apply → re-apply NetLimiter rules
+//   http://<client-ip>:8766/netlimiter/apply → set/re-apply NetLimiter tier
+//                                               body: { tier, bytes }
 //   http://<client-ip>:8766/health    → { ok:true, machine, version }
 //
 // Everything runs in the interactive user session because the agent itself
 // runs there (see install-service.ps1: uses "Run at logon" scheduled task,
 // NOT a session-0 service). No PsExec, no SMB shares, no admin creds.
 // Zero npm dependencies — just Node.js 18+.
+//
+// This is now the PREFERRED path for every QoS change (ping-agent.mjs tries
+// this first, and only falls back to PsExec + netlimiter-qos.ps1 over SMB if
+// this agent is unreachable). Since this agent already runs locally on the
+// VIP, applying QoS through it never touches SMB at all, so it can't collide
+// with SmartLaunch's or UVNC's own SMB sessions to the same host — that
+// collision (Windows error 5 "Access is denied" / 1219 "Multiple
+// connections...") was the actual cause of QoS silently failing to apply
+// while UVNC/SmartLaunch held a session open.
 // ─────────────────────────────────────────────────────────────────────────
 
 import { createServer } from "node:http";
@@ -20,11 +30,19 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir, hostname } from "node:os";
 import { join } from "node:path";
 
-const VERSION = "1.0.0";
+const VERSION = "1.1.0";
 const PORT = Number(process.env.EXIR_CLIENT_PORT || 8766);
 const MACHINE = (process.env.EXIR_MACHINE_ID || hostname()).toUpperCase();
-const NLQ = process.env.NETLIMITER_NLQ ||
-  "C:\\Program Files\\Locktime Software\\NetLimiter 4\\nlq.exe";
+// NOTE: nlq.exe does NOT exist in NetLimiter 4.1.13 (it was a CLI tool from
+// older NetLimiter versions — see ping-agent.mjs comments). The working
+// approach talks to NetLimiter.dll directly via .NET reflection, which is
+// what netlimiter-qos.ps1 (deployed on every VIP by Setup-NetLimiter-VIP.ps1)
+// already does. This agent just runs that same script locally — since this
+// agent runs IN the interactive user session already, no PsExec/SMB call is
+// needed at all, which is exactly what sidesteps the SmartLaunch/UVNC SMB
+// session conflicts.
+const NETLIMITER_QOS_SCRIPT = process.env.NETLIMITER_QOS_SCRIPT ||
+  "C:\\GameNet-Monitor\\netlimiter-qos.ps1";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -70,24 +88,50 @@ function launchHta(html, { punish = false } = {}) {
   return { path };
 }
 
-// ── NetLimiter re-apply (called after UVNC drops the rule state) ────────
-const NL_RULES = ["Exir-500K", "Exir-1M", "Exir-2M", "Exir-UNL"];
-
-function nlqRun(args) {
+// ── NetLimiter re-apply (called after UVNC/SmartLaunch drops the rule state,
+// or directly by the server as the PREFERRED path for every QoS change) ──
+//
+// Runs netlimiter-qos.ps1 locally (no PsExec, no SMB — this agent already
+// lives in the interactive session on the VIP). $Bytes is computed centrally
+// by ping-agent.mjs (QOS_TIER_KBYTES in .env) and just passed straight
+// through, same contract as the PsExec fallback path.
+function runQosScript(tier, bytes) {
   return new Promise((resolve) => {
-    execFile(NLQ, args, { timeout: 8000 }, (err, out, stderr) => {
-      resolve({ ok: !err, out: String(out || ""), err: String(stderr || err?.message || "") });
+    const args = [
+      "-ExecutionPolicy", "Bypass",
+      "-File", NETLIMITER_QOS_SCRIPT,
+      "-Tier", tier,
+      ...(bytes > 0 ? ["-Bytes", String(bytes)] : []),
+    ];
+    execFile("powershell", args, { timeout: 8000, windowsHide: true }, (err, stdout, stderr) => {
+      // netlimiter-qos.ps1 prints exactly one JSON line on stdout.
+      const text = String(stdout || "");
+      const jsonLine = text
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .find((l) => l.startsWith("{") && l.endsWith("}"));
+      if (jsonLine) {
+        try { return resolve(JSON.parse(jsonLine)); } catch { /* fall through */ }
+      }
+      resolve({
+        ok: false,
+        error: (stderr || err?.message || "no JSON output from netlimiter-qos.ps1").toString().slice(0, 300),
+      });
     });
   });
 }
 
-async function applyNetLimiter(tier) {
-  // Disable all, enable the one that matches.
-  const want = tier ? `Exir-${tier}` : null;
-  for (const r of NL_RULES) {
-    await nlqRun(["EnableRule", r, r === want ? "1" : "0"]);
-  }
-  return { ok: true, applied: want || "none" };
+async function applyNetLimiter(tier, bytes) {
+  const t = tier && tier !== "off" ? tier : "UNL";
+  const b = Number(bytes) || 0;
+  const r = await runQosScript(t, b);
+  return {
+    ok: !!r.ok,
+    tier: t,
+    ...(r.ok
+      ? { limitBytesPerSec: r.limitBytesPerSec ?? (t !== "UNL" ? b : "unlimited") }
+      : { error: r.error || "unknown error" }),
+  };
 }
 
 // ── Server ──────────────────────────────────────────────────────────────
@@ -109,8 +153,10 @@ const server = createServer(async (req, res) => {
 
     if (req.method === "POST" && req.url === "/netlimiter/apply") {
       const body = await readBody(req);
-      const { tier } = JSON.parse(body || "{}"); // e.g. "500K", "1M", "2M", "UNL", or null
-      const r = await applyNetLimiter(tier);
+      // tier: "500K" | "1M" | "2M" | "UNL" | null. bytes: precomputed B/s for
+      // the tier (ignored for UNL) — server centralizes the tier→bytes table.
+      const { tier, bytes } = JSON.parse(body || "{}");
+      const r = await applyNetLimiter(tier, bytes);
       return json(res, 200, r);
     }
 
